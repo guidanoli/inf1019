@@ -2,6 +2,9 @@
 *
 !*.*
 
+# Backup files
+*~
+
 # Prerequisites
 *.d
 
