@@ -1,6 +1,9 @@
 # UNIX Binaries
 *
+!src/
 !*.*
+!*Makefile
+!*LICENSE
 
 # Backup files
 *~

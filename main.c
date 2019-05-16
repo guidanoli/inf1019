@@ -6,10 +6,15 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include "queue.h"
 
+#define QTD_FILAS 3
 #define STR_PROGNAME_MAX 64
 #define PROG_FILENAME "prog"
 #define _DEBUG
+
+qhead filas[QTD_FILAS];
+qnode current_process = NULL;
 
 int main(int argc, char ** argv)
 {

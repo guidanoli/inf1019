@@ -1,6 +1,9 @@
 // Queue module interface
 // Guilherme Dantas
 
+#ifndef _H_QUEUE
+#define _H_QUEUE
+
 typedef struct queue_head_s * qhead;
 typedef struct queue_node_s * qnode;
 
@@ -62,4 +65,7 @@ qnode qhead_rm ( qhead head );
 // qhead_destroy(&head);
 //
 void qhead_destroy ( qhead * head );
+
+#endif
+
 
