@@ -10,8 +10,9 @@ typedef struct queue_node_s * qnode;
 
 // Create node
 // id is the node's identification
-// Returns pointer to node or NULL (mem)
-qnode qnode_create ( int id );
+// Returns pointer to node or NULL (mem) in *pnode
+// Returns 0 if successful or -1 otherwise
+int qnode_create ( qnode * pnode , int id );
 
 // Get node id
 // node is pointer to node
@@ -19,8 +20,8 @@ qnode qnode_create ( int id );
 int qnode_getid ( qnode node );
 
 // Destroy node
-// node is pointer to node
-void qnode_destroy ( qnode node );
+// node is pointer to pointer to node
+void qnode_destroy ( qnode * node );
 
 ////////////////////////////////////////////////
 // QUEUE HEAD FUNCTIONS
@@ -28,8 +29,9 @@ void qnode_destroy ( qnode node );
 
 // Create head
 // id is the head's identification
-// Returns pointer to head or NULL (mem)
-qhead qhead_create ( int id );
+// Returns pointer to head or NULL (mem) in *phead
+// Returns 0 if successful or -1 otherwise
+int qhead_create ( qhead * phead , int id );
 
 // Get head id
 // head is pointer to head
@@ -48,6 +50,6 @@ void qhead_ins ( qhead head , qnode node );
 qnode qhead_rm ( qhead head );
 
 // Destroy head and its nodes
-// head is pointer to head
-void qhead_destroy ( qhead head );
+// head is pointer to pointer to head
+void qhead_destroy ( qhead * head );
 
