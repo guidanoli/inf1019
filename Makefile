@@ -1,9 +1,9 @@
 # Makefile
 # Guilherme Dantas
 
-ARGS = -W
+ARGS = -Wall
 
-all: testq main clean
+all: testq main
 
 main: prog main.o queue.o
 	gcc -o main main.o queue.o $(ARGS)
