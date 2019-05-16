@@ -22,7 +22,7 @@ int qnode_create ( qnode * pnode , void * info );
 // Returns info or null if node doesn't exist
 void * qnode_getinfo ( qnode node );
 
-// Destroy node
+// Destroy node and its info
 // node is pointer to pointer to node
 void qnode_destroy ( qnode * node );
 
@@ -31,15 +31,15 @@ void qnode_destroy ( qnode * node );
 ////////////////////////////////////////////////
 
 // Create head
-// id is the head's identification
+// info is the head's information
 // Returns pointer to head or NULL (mem) in *phead
 // Returns 0 if successful or -1 otherwise
-int qhead_create ( qhead * phead , int id );
+int qhead_create ( qhead * phead , void * info );
 
-// Get head id
+// Get head info
 // head is pointer to head
-// Returns id or -1 if null
-int qhead_getid ( qhead head );
+// Returns info or NULL if head doesn't exist
+void * qhead_getinfo ( qhead head );
 
 // Insert node (at the end)
 // head is pointer to head
@@ -52,7 +52,7 @@ void qhead_ins ( qhead head , qnode node );
 //          NULL if head is NULL or queue is empty
 qnode qhead_rm ( qhead head );
 
-// Destroy head and its nodes
+// Destroy head, its info and its nodes (and its infos)
 // head is pointer to pointer to head
 // [!] this will lead any node pointers
 // to nodes of the queue to point to trash
