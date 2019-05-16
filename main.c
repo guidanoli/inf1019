@@ -15,6 +15,20 @@
 #define QTD_FILAS 3
 #define STR_PROGNAME_MAX 64
 
+typedef enum {
+	RUNNING ,
+	SLEEPING ,
+} pstatus;
+
+typedef struct process_s {
+	int pid;
+	pstatus status;	
+} process;
+
+typedef struct fila_s {
+	int id;
+} fila;
+
 qhead filas[QTD_FILAS];
 qnode current_process = NULL;
 
@@ -26,7 +40,9 @@ int main(int argc, char ** argv)
   
   for( int i = 0 ; i < QTD_FILAS ; i++ )
   {
-    if( qhead_create(filas,i+1) != 0 )
+  	fila * pfila = (fila *) malloc(sizeof(fila));
+  	pfila->id = i+1;
+    if( qhead_create(filas+i,pfila) != 0 )
     {
       fprintf(stderr,"Não foi possível alocar espaço na memória.\n");
       return EXIT_FAILURE;
@@ -86,9 +102,9 @@ int main(int argc, char ** argv)
     waitpid(pid,&status,0);
     qnode_destroy(&current_process);
   }
-  qhead_destroy(filas);
-  qhead_destroy(filas+1);
-  qhead_destroy(filas+2);
+  
+  for(int i = 0 ; i < QTD_FILAS ; i++)
+  	qhead_destroy(filas+i);
   
 	return EXIT_SUCCESS;
 }
