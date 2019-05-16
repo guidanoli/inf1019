@@ -14,7 +14,6 @@
 
 #define QTD_FILAS 3
 #define STR_PROGNAME_MAX 64
-#define PROG_FILENAME "prog"
 
 qhead filas[QTD_FILAS];
 qnode current_process = NULL;
@@ -60,14 +59,16 @@ int main(int argc, char ** argv)
       sprintf(r1,"%d",r[0]);
       sprintf(r2,"%d",r[1]);
       sprintf(r3,"%d",r[2]);
-      execl(PROG_FILENAME,PROG_FILENAME,r1,r2,r3,(char *)NULL);
+      execl(prog,prog,r1,r2,r3,(char *)NULL);
     }
     else
     {
+    	int * pid_pointer = (int *) malloc(sizeof(int));
+    	*pid_pointer = pid;
       kill(pid,SIGSTOP);
       qnode process;
       printf("Capturei o processo de pid %d\n",pid);
-      if( qnode_create(&process,pid) != 0 )
+      if( qnode_create(&process,pid_pointer) != 0 )
       {
         fprintf(stderr,"Não foi possível alocar espaço na memória.\n");
         return EXIT_FAILURE;
@@ -79,7 +80,7 @@ int main(int argc, char ** argv)
   
   while((current_process = qhead_rm(filas[0]))!=NULL)
   {
-    pid = qnode_getid(current_process);
+    int pid = *((int *)qnode_getinfo(current_process));
     printf("Recuperado processo de pid %d\n",pid);
     kill(pid,SIGCONT);
     waitpid(pid,&status,0);

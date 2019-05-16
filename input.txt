@@ -1,2 +1,2 @@
-exec P1 (2, 6, 4)
-exec P2 (5, 5, 7)
+exec prog (2, 6, 4)
+exec prog (5, 5, 7)

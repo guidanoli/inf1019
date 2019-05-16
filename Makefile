@@ -3,7 +3,7 @@
 
 ARGS = -W
 
-all: testq main clean
+all: testq main
 
 main: prog main.o queue.o
 	gcc -o main main.o queue.o $(ARGS)
@@ -20,5 +20,5 @@ test_queue.o: test_queue.c queue.h
 queue.o: queue.c queue.h
 	gcc -o queue.o queue.c -c $(ARGS)
 
-clean:
-	rm -rf *.o
+#clean:
+#	rm -rf *.o

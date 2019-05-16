@@ -12,15 +12,15 @@ typedef struct queue_node_s * qnode;
 ///////////////////////////////////////////
 
 // Create node
-// id is the node's identification
+// info is the node's information
 // Returns pointer to node or NULL (mem) in *pnode
 // Returns 0 if successful or -1 otherwise
-int qnode_create ( qnode * pnode , int id );
+int qnode_create ( qnode * pnode , void * info );
 
-// Get node id
+// Get node info
 // node is pointer to node
-// Returns id or -1 if null
-int qnode_getid ( qnode node );
+// Returns info or null if node doesn't exist
+void * qnode_getinfo ( qnode node );
 
 // Destroy node
 // node is pointer to pointer to node

@@ -12,9 +12,9 @@ int main(int argc, char ** argv)
 	  for( int j = 0 ; j < atoi(argv[i]) ; j++ )
 	  {
 	    printf("%d\n",getpid());
-	    sleep(1); // CPU-bound
+	    sleep(1); // CPU
 	  }
-	  if( i < argc - 1 ) sleep(3); // IO-bound
+	  if( i < argc - 1 ) sleep(3); // IO
 	}
 	return 0;
 }

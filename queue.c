@@ -6,7 +6,7 @@
 #include "queue.h"
 
 typedef struct queue_node_s {
-  int id;       // id
+  void * info;  // info
   qnode next;   // next
 } queue_node;
 
@@ -27,28 +27,28 @@ static int qhead_has_node ( qhead head, qnode node );
 ///////////////////////////////////////////
 
 // Create node
-// id is the node's identification
+// info is the node's information
 // Returns pointer to node or NULL (mem) in *pnode
 // Returns 0 if successful or -1 otherwise
-int qnode_create ( qnode * pnode , int id )
+int qnode_create ( qnode * pnode , void * info )
 {
   qnode node;
-  if( pnode == NULL ) return -1;
+  if( pnode == NULL || info == NULL ) return -1;
   node = ( qnode ) malloc(sizeof(queue_node));
   if( node == NULL ) return -1;
-  node->id = id;
+  node->info = info;
   node->next = NULL;
   *pnode = node;
   return 0;
 }
 
-// Get node id
+// Get node info
 // node is pointer to node
-// Returns id or -1 if null
-int qnode_getid ( qnode node )
+// Returns info or null if node doesn't exist
+void * qnode_getinfo ( qnode node )
 {
-  if( node == NULL ) return -1;
-  return node->id;
+  if( node == NULL ) return NULL;
+  return node->info;
 }
 
 // Destroy node
@@ -57,6 +57,7 @@ void qnode_destroy ( qnode * node )
 {
   if( node && *node )
   {
+  	free((*node)->info);
     free(*node);
     *node = NULL;
   }
