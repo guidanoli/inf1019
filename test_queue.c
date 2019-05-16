@@ -38,7 +38,22 @@ int main( void )
   assert(node==qhead_rm(head));
   assert(NULL==qhead_rm(head));
   
-  // free it all
+  // check if destroying head destroys nodes
+  // [!] wrong way of doing it
+  qhead_ins(head,node);
   qhead_destroy(&head);
+  assert(head==NULL);
+  assert(node!=NULL); // [!] contains trash (bad)
+  
+  // correct way of destroying queue
+  assert(qhead_create(&head,10)==0);
+  assert(qnode_create(&node,64)==0);
+  qhead_ins(head,node);
+  assert(qhead_rm(head)==node);
   qnode_destroy(&node);
+  qhead_destroy(&head);
+  assert(head==NULL);
+  assert(node==NULL); // both clean!
+  
+  return 0;
 }
