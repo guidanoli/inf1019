@@ -52,8 +52,14 @@ qnode qhead_rm ( qhead head );
 // Destroy head and its nodes
 // head is pointer to pointer to head
 // [!] this will lead any node pointers
-// to contain trash since it cannot modify
-// its values if its pointers aren't provided
-// Thus, it is recommended to qnode_destroy them
+// to nodes of the queue to point to trash
+// [!] To avoid dealing with crazy pointers
+// consider removing and destroying nodes
+// until the queue is empty, as follows:
+//
+// while((node=qhead_rm(head))!=NULL)
+//   qnode_destroy(&node);
+// qhead_destroy(&head);
+//
 void qhead_destroy ( qhead * head );
 

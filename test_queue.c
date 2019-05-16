@@ -9,6 +9,7 @@ int main( void )
 {
   qhead head;
   qnode node;
+  int aux;
 
   // testing NULL as parameter
   assert(qnode_create(NULL,123)!=0);
@@ -54,6 +55,29 @@ int main( void )
   qhead_destroy(&head);
   assert(head==NULL);
   assert(node==NULL); // both clean!
+  
+  // for many items...
+  qhead_create(&head,32);
+  aux = 0;
+  for( int i = 0 ; i < 10 ; i++ )
+  {
+    // [!] dangerous. loss of data about nodes
+    // just from test conciseness sake
+    qnode_create(&node,i);
+    qhead_ins(head,node);
+    aux++;
+  }
+  
+  // destroy until empty
+  while(( node = qhead_rm(head) ) != NULL )
+  {
+    qnode_destroy(&node);
+    assert(node==NULL);
+    aux--;
+  }
+  qhead_destroy(&head);
+  assert(head==NULL);
+  assert(aux==0); // #inserted = #removed
   
   return 0;
 }
