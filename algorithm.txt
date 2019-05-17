@@ -1,0 +1,56 @@
+
+  Algorithm (in pseudo-code)
+  ---------
+  
+  1   def scheduler
+  2   | all procedures have terminated?
+  3   | | end
+  4   | else
+  5   | | is there a procedure running?
+  6   | | | has it consumed its quantum?
+  7   | | | | has it consumed less that quantum?
+  8   | | | | | raise its priority if possible
+  9   | | | | else
+  10  | | | | | lower its priority if possible
+  11  | | | | stop procedure and put it in the correct queue
+  12  | | | else
+  13  | | | | wait
+  14  | | else
+  15  | | | start next procedure
+  16  end
+  
+  Definitions:
+  
+  - A queue is a list where you can only add nodes in end and remove
+  from the beginning
+  - A node carries only one information: the procedure id (pid)
+  - A procedure is removed from the queue system only when terminated
+  or scheduled. The first, for ever; The last, only on its quantum.
+  - There are 3 queues: F1, F2, F3. One has a higher priority than
+  the other. F1 > F2 > F3. On the other hand, their quantum are
+  inversevly proportional to their priority. That is, in terms of
+  time run by a process in F1 is smaller than on F2, and so on.
+  - When initialized, the scheduler puts all procedures in F1.
+  - The scheduler runs fully each queue depending on its priority.
+  F1 can be run until 4 times, F2 2 times, F1 once. This keeps the
+  idea of priority but does not leave procedures with lower
+  priority starving.
+  
+  Pseudo-code explanation:
+  
+  2: We know all procedures have terminated when all queues are empty
+  and the current procedure pointer is null
+  5: If the procedure pointer is null, no procedure is running
+  6: 7: The scheduler will wait T u.t. (determined by the current
+  procedure's queue) and when done, will stop the current procedure.
+  If the current procedure enters an I/O phase, then the scheduler
+  will be woken up - and thus, knowing it has finished its CPU phase
+  before the quantum.
+  8: 10: If not at highest priority, raise its priority. If not at
+  lowest priority, lower its priority.
+  11: Give it a signal SIGSTOP in order to - well - stop. Remove it
+  from its queue and add it on the correct one (or even the same one,
+  at the end of it).
+  13: Literally do nothing.
+  15: From the current queue, give a signal to the process whose pid
+  is stored in the node removed (TEMPORARLY)
