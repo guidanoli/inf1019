@@ -82,6 +82,15 @@ int qhead_create ( qhead * phead , int id )
   return 0;
 }
 
+// Check if head is empty (no nodes)
+// head is pointer to head
+// Returns 1 (true), 0 (false) or -1 (null head)
+int qhead_empty ( qhead head )
+{
+  if( head == NULL ) return -1;
+  return head->ini == NULL ? 1 : 0;
+}
+
 // Get head id
 // head is pointer to head
 // Returns id or -1 if null

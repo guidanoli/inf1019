@@ -36,6 +36,11 @@ void qnode_destroy ( qnode * node );
 // Returns 0 if successful or -1 otherwise
 int qhead_create ( qhead * phead , int id );
 
+// Check if head is empty (no nodes)
+// head is pointer to head
+// Returns 1 (true), 0 (false) or -1 (null head)
+int qhead_empty ( qhead head );
+
 // Get head id
 // head is pointer to head
 // Returns id or -1 if null
