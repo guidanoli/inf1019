@@ -1,24 +1,27 @@
 # Makefile
 # Guilherme Dantas
 
-ARGS = -Wall
+CFLAGS = -Wall
+
+debug: DEBUG = -D _DEBUG
+debug: all
 
 all: testq main
 
 main: prog main.o queue.o
-	gcc -o main main.o queue.o $(ARGS)
+	$(CC) $(DEBUG) -o main main.o queue.o
 	
 testq: test_queue.o queue.o
-	gcc -o testq test_queue.o queue.o $(ARGS)
+	$(CC) $(DEBUG) -o testq test_queue.o queue.o
 	
 prog: prog.c
-	gcc -o prog prog.c $(ARGS)
+	$(CC) $(DEBUG) -o prog prog.c
 
 test_queue.o: test_queue.c queue.h
-	gcc -o test_queue.o test_queue.c -c $(ARGS)
+	$(CC) $(DEBUG) -o test_queue.o test_queue.c -c
 
 queue.o: queue.c queue.h
-	gcc -o queue.o queue.c -c $(ARGS)
+	$(CC) $(DEBUG) -o queue.o queue.c -c
 
 clean:
 	rm -rf *.o

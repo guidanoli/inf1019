@@ -3,92 +3,133 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
 #include <errno.h>
 #include <sys/types.h> 
 #include <unistd.h>
 #include <sys/wait.h>
+#include <stdarg.h>
 #include <string.h>
 #include "queue.h"
 
 #define QTD_FILAS 3
-#define STR_PROGNAME_MAX 64
+#define ARG_SIZE 64
+#define QTD_ARGS 16
 
 qhead filas[QTD_FILAS];
 qnode current_process = NULL;
 
-int main(int argc, char ** argv)
+static int fatal_error(const char * err_msg_format, ...)
 {
-  char c;
-  int status = 0;
-  pid_t pid;
-  
-  /* creating queues */
+  va_list vl;
+  va_start(vl, err_msg_format);
+  vfprintf(stderr,err_msg_format,vl);
+  va_end(vl);
+  return EXIT_FAILURE;
+}
+
+static int create_queues(void)
+{
   for( int i = 0 ; i < QTD_FILAS ; i++ )
   {
     if( qhead_create(filas+i,i+1) != 0 )
-    {
-      fprintf(stderr,"Não foi possível alocar espaço na memória.\n");
-      return EXIT_FAILURE;
-    }
+      return fatal_error("Não foi possível alocar espaço na memória.\n");
   }
-  
-  /* stdin processing */
-  while((c = fgetc(stdin)) == 'e')
+  return 0;
+}
+
+static void destroy_queues(void)
+{
+  for( int i = 0 ; i < QTD_FILAS ; i++ )
   {
-    char prog[STR_PROGNAME_MAX] = "";
-    int r[3];
-    
-    if( scanf("xec %s (%d,%d,%d)\n",prog,r,r+1,r+2) != 4 )
-    {
-      fprintf(stderr,"String mal formatada.\n");
-      return EXIT_FAILURE;
-    }
-    
-    scanf(" "); // wait until next non-whitespace character
-    
-    #ifdef _DEBUG
-    printf("Carregado programa %s com rajadas %d, %d e %d.\n",prog,r[0],r[1],r[2]);
-    #endif
-    
-    if((pid = fork()) == 0)
-    {
-      char r0[16] = "";
-      char r1[16] = "";
-      char r2[16] = "";
-      sprintf(r0,"%d",r[0]);
-      sprintf(r1,"%d",r[1]);
-      sprintf(r2,"%d",r[2]);
-      execl(prog,prog,r0,r1,r2,(char *)NULL);
-    }
-    else
-    {
-      kill(pid,SIGSTOP);
-      qnode process;
-      if( qnode_create(&process,pid) != 0 )
-      {
-        fprintf(stderr,"Não foi possível alocar espaço na memória.\n");
-        return EXIT_FAILURE;
-      }
-      qhead_ins(filas[0],process);
-      printf("[%d] inserido em F1\n",pid);
-    }
-    
+    qhead_destroy(filas+i);
+  }
+}
+
+int main(int argc, char ** argv)
+{
+  int status = 0, ret;
+  char c;
+  pid_t pid;
+  
+  if((ret=create_queues())!=0) return ret;
+  
+   while((c = fgetc(stdin)) == 'e')
+   {
+     char prog[ARG_SIZE] = "";
+     int raj[QTD_ARGS];
+     int qt_raj = 1;
+     
+     if( scanf("xec %s (%d",prog,raj) != 2 )
+     { 
+       return fatal_error("String mal formatada.\n");
+   }
+   while((c = fgetc(stdin)) == ',')
+   {
+     if( scanf("%d",raj+qt_raj) != 1 )
+     {
+       return fatal_error("String mal formatada.\n");
+     }
+     qt_raj++;
+   }
+   if( c != ')' )
+   {
+     return fatal_error("String mal formatada.\n");
+   }
+   scanf(" ");
+   
+   if((pid = fork()) == 0)
+   {
+     char * args[QTD_ARGS];
+     for( int i = 0 ; i < qt_raj+2 ; i++ )
+     {
+       args[i] = (char *) malloc(sizeof(char)*ARG_SIZE);
+       if( i == 0 ) strcpy(args[0],prog);
+       else if( i < qt_raj+1 ) sprintf(args[i],"%d",raj[i-1]);
+       #ifdef _DEBUG
+       if( i < qt_raj+1 ) printf("args[%d] = %s\n",i,args[i]);
+       #endif
+     }
+     args[qt_raj+1] = NULL;
+     #ifdef _DEBUG
+     printf("Entrando...\n");
+     #endif
+     if( execv(*args,args) == -1 )
+     {
+       return fatal_error("Could not execute program %d.\n",getpid());
+     }
+   }
+   else
+   {
+     #ifdef _DEBUG
+     printf("Fazendo o processo filho parar\n");
+     #endif
+     kill(pid,SIGSTOP);
+     qnode process;
+     if( qnode_create(&process,pid) != 0 )
+     {
+       fprintf(stderr,"Não foi possível alocar espaço na memória.\n");
+       return EXIT_FAILURE;
+     }
+     qhead_ins(filas[0],process);
+     #ifdef _DEBUG
+     printf("[%d] inserido em F1\n",pid);
+     #endif
+   }
+   
   }
   
-  /* waking up processes from F1 */
   while((current_process = qhead_rm(filas[0]))!=NULL)
   {
     pid = qnode_getid(current_process);
+    #ifdef _DEBUG
     printf("[%d] retirado de F1\n",pid);
+    #endif
     kill(pid,SIGCONT);
     waitpid(pid,&status,0);
     qnode_destroy(&current_process);
   }
-  qhead_destroy(filas);
-  qhead_destroy(filas+1);
-  qhead_destroy(filas+2);
+  
+  destroy_queues();
   
 	return EXIT_SUCCESS;
 }
