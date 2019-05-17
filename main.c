@@ -63,7 +63,7 @@ int main(int argc, char ** argv)
     
     if( scanf("xec %s (%d",prog,raj) != 2 )
     { 
-       return fatal_error("String mal formatada.\n");
+      return fatal_error("String mal formatada.\n");
     }
     while((c = fgetc(stdin)) == ',')
     {
@@ -78,7 +78,7 @@ int main(int argc, char ** argv)
       return fatal_error("String mal formatada.\n");
     }
     scanf(" ");
-   
+    
     if((pid = fork()) == 0)
     {
       char * args[QTD_ARGS];

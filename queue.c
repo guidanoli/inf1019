@@ -29,17 +29,17 @@ static int qhead_has_node ( qhead head, qnode node );
 // Create node
 // id is the node's identification
 // Returns pointer to node or NULL (mem) in *pnode
-// Returns 0 if successful or -1 otherwise
-int qnode_create ( qnode * pnode , int id )
+// Returns OK, NULL or MEM
+queue_ret qnode_create ( qnode * pnode , int id )
 {
   qnode node;
-  if( pnode == NULL ) return -1;
+  if( pnode == NULL ) return QUEUE_NULL;
   node = ( qnode ) malloc(sizeof(queue_node));
-  if( node == NULL ) return -1;
+  if( node == NULL ) return QUEUE_MEM;
   node->id = id;
   node->next = NULL;
   *pnode = node;
-  return 0;
+  return QUEUE_OK;
 }
 
 // Get node id
@@ -69,26 +69,26 @@ void qnode_destroy ( qnode * node )
 // Create head
 // id is the head's identification
 // Returns pointer to head or NULL (mem) in *phead
-// Returns 0 if successful or -1 otherwise
-int qhead_create ( qhead * phead , int id )
+// Returns OK, NULL or MEM
+queue_ret qhead_create ( qhead * phead , int id )
 {
   qhead head;
-  if( phead == NULL ) return -1;
+  if( phead == NULL ) return QUEUE_NULL;
   head = ( qhead ) malloc(sizeof(queue_head));
-  if( head == NULL ) return -1;
+  if( head == NULL ) return QUEUE_MEM;
   head->id = id;
   head->ini = head->end = NULL;
   *phead = head;
-  return 0;
+  return QUEUE_OK;
 }
 
 // Check if head is empty (no nodes)
 // head is pointer to head
-// Returns 1 (true), 0 (false) or -1 (null head)
-int qhead_empty ( qhead head )
+// Returns OK, FALSE or NULL
+queue_ret qhead_empty ( qhead head )
 {
-  if( head == NULL ) return -1;
-  return head->ini == NULL ? 1 : 0;
+  if( head == NULL ) return QUEUE_NULL;
+  return head->ini == NULL ? QUEUE_OK : QUEUE_FALSE;
 }
 
 // Get head id

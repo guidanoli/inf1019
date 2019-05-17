@@ -6,11 +6,12 @@
 #include <assert.h>
 #include "queue.h"
 
+/* TEST MODULE TOOLKIT */
+
 #define DEFAULT_COLOR "\033[0m"
 #define RED "\033[0;31m"
 #define GREEN "\033[0;32m"
 #define YELLOW "\033[0;33m"
-
 #define assert(x) assertcolor(x,#x,__LINE__)
 
 static void printcolor(const char * tag, const char * color, const char * msg);
@@ -23,39 +24,47 @@ static void show_log();
 int n_tests = 0;
 int n_failed = 0;
 
+/* CONSTANTS */
+
 int main( void )
 {
   qhead head;
   qnode node;
-  int aux;
+  int aux, i;
 
   // testing NULL as parameter
-  assert(qnode_create(NULL,123)!=0);
-  assert(qhead_create(NULL,456)!=0);
-  assert(qnode_getid(NULL)!=0);
-  assert(qhead_getid(NULL)!=0);
+  assert(qnode_create(NULL,123)==QUEUE_NULL);
+  assert(qhead_create(NULL,456)==QUEUE_NULL);
+  assert(qnode_getid(NULL)==-1);
+  assert(qhead_getid(NULL)==-1);
   qhead_ins(NULL,NULL);
   assert(qhead_rm(NULL)==NULL);
   qnode_destroy(NULL);
   qhead_destroy(NULL);
+  assert(qhead_empty(NULL)==QUEUE_NULL);
   
   // empty queue
-  assert(qhead_create(&head,2019)==0);
+  assert(qhead_create(&head,2019)==QUEUE_OK);
   assert(head!=NULL);
   assert(qhead_getid(head)==2019);
   assert(qhead_rm(head)==NULL);
   qhead_ins(head,NULL);
+  assert(qhead_empty(head)==QUEUE_OK);
   
   // one node
-  assert(qnode_create(&node,1019)==0);
+  assert(qnode_create(&node,1019)==QUEUE_OK);
   assert(node!=NULL);
   assert(qnode_getid(node)==1019);
   
   // test if won't add twice
+  // queue will contain only one
   qhead_ins(head,node);
   qhead_ins(head,node);
+  assert(qhead_empty(head)==QUEUE_FALSE);
   assert(node==qhead_rm(head));
+  assert(qhead_empty(head)==QUEUE_OK);
   assert(NULL==qhead_rm(head));
+  assert(qhead_empty(head)==QUEUE_OK);
   
   // check if destroying head destroys nodes
   // [!] wrong way of doing it
@@ -65,8 +74,8 @@ int main( void )
   assert(node!=NULL); // [!] contains trash (bad)
   
   // correct way of destroying queue
-  assert(qhead_create(&head,10)==0);
-  assert(qnode_create(&node,64)==0);
+  assert(qhead_create(&head,10)==QUEUE_OK);
+  assert(qnode_create(&node,64)==QUEUE_OK);
   qhead_ins(head,node);
   assert(qhead_rm(head)==node);
   qnode_destroy(&node);
