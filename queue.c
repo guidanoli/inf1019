@@ -6,14 +6,14 @@
 #include "queue.h"
 
 typedef struct queue_node_s {
-  void * info;  // info
+  int id;       // id
   qnode next;   // next
 } queue_node;
 
 typedef struct queue_head_s {
-  void * info; 	// info
-  qnode ini;   	// initial  
-  qnode end;   	// ending
+  int id;      // id
+  qnode ini;   // initial  
+  qnode end;   // ending
 } queue_head;
 
 ///////////////////////////////////////////
@@ -27,37 +27,36 @@ static int qhead_has_node ( qhead head, qnode node );
 ///////////////////////////////////////////
 
 // Create node
-// info is the node's information
+// id is the node's identification
 // Returns pointer to node or NULL (mem) in *pnode
 // Returns 0 if successful or -1 otherwise
-int qnode_create ( qnode * pnode , void * info )
+int qnode_create ( qnode * pnode , int id )
 {
   qnode node;
-  if( pnode == NULL || info == NULL ) return -1;
+  if( pnode == NULL ) return -1;
   node = ( qnode ) malloc(sizeof(queue_node));
   if( node == NULL ) return -1;
-  node->info = info;
+  node->id = id;
   node->next = NULL;
   *pnode = node;
   return 0;
 }
 
-// Get node info
+// Get node id
 // node is pointer to node
-// Returns info or null if node doesn't exist
-void * qnode_getinfo ( qnode node )
+// Returns id or -1 if null
+int qnode_getid ( qnode node )
 {
-  if( node == NULL ) return NULL;
-  return node->info;
+  if( node == NULL ) return -1;
+  return node->id;
 }
 
-// Destroy node and its info
+// Destroy node
 // node is pointer to pointer to node
 void qnode_destroy ( qnode * node )
 {
   if( node && *node )
   {
-  	free((*node)->info);
     free(*node);
     *node = NULL;
   }
@@ -68,28 +67,28 @@ void qnode_destroy ( qnode * node )
 ////////////////////////////////////////////////
 
 // Create head
-// info is the head's information
+// id is the head's identification
 // Returns pointer to head or NULL (mem) in *phead
 // Returns 0 if successful or -1 otherwise
-int qhead_create ( qhead * phead , void * info )
+int qhead_create ( qhead * phead , int id )
 {
   qhead head;
-  if( phead == NULL || info == NULL ) return -1;
+  if( phead == NULL ) return -1;
   head = ( qhead ) malloc(sizeof(queue_head));
   if( head == NULL ) return -1;
-  head->info = info;
+  head->id = id;
   head->ini = head->end = NULL;
   *phead = head;
   return 0;
 }
 
-// Get head info
+// Get head id
 // head is pointer to head
-// Returns info or NULL if head doesn't exist
-void * qhead_getinfo ( qhead head )
+// Returns id or -1 if null
+int qhead_getid ( qhead head )
 {
-  if( head == NULL ) return NULL;
-  return head->info;
+  if( head == NULL ) return -1;
+  return head->id;
 }
 
 // Insert node (at the end)
@@ -126,7 +125,7 @@ qnode qhead_rm ( qhead head )
   return node;
 }
 
-// Destroy head, its info and its nodes (and its infos)
+// Destroy head and its nodes
 // head is pointer to pointer to head
 void qhead_destroy ( qhead * head )
 {
@@ -138,7 +137,6 @@ void qhead_destroy ( qhead * head )
     qnode_destroy(&q);
     q = qnext;
   }
-  free((*head)->info);
   free(*head);
   *head=NULL;
 }

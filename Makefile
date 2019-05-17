@@ -1,24 +1,30 @@
 # Makefile
 # Guilherme Dantas
 
-ARGS = -W
+CFLAGS = -w
 
 all: testq main
 
 main: prog main.o queue.o
-	gcc -o main main.o queue.o $(ARGS)
+	$(CC) $(DEBUG) -o main main.o queue.o $(CFLAGS)
 	
 testq: test_queue.o queue.o
-	gcc -o testq test_queue.o queue.o $(ARGS)
+	$(CC) $(DEBUG) -o testq test_queue.o queue.o $(CFLAGS)
 	
 prog: prog.c
-	gcc -o prog prog.c $(ARGS)
+	$(CC) $(DEBUG) -o prog prog.c $(CFLAGS)
 
 test_queue.o: test_queue.c queue.h
-	gcc -o test_queue.o test_queue.c -c $(ARGS)
+	$(CC) $(DEBUG) -o test_queue.o test_queue.c -c $(CFLAGS)
 
 queue.o: queue.c queue.h
-	gcc -o queue.o queue.c -c $(ARGS)
+	$(CC) $(DEBUG) -o queue.o queue.c -c $(CFLAGS)
 
-#clean:
-#	rm -rf *.o
+clean:
+	# remove binares
+	find . -type f -executable -exec sh -c "file -i '{}' | grep -q 'x-executable; charset=binary'" \; -print | xargs rm -f
+	# remove object files
+	rm *.o
+	
+debug: DEBUG = -D _DEBUG
+debug: all
