@@ -5,7 +5,7 @@ CFLAGS = -w
 
 all: testq main
 
-main: prog main.o queue.o
+main: prog main.o queue.o semlib.o
 	$(CC) $(DEBUG) -o main main.o queue.o $(CFLAGS)
 	
 testq: test_queue.o queue.o
@@ -20,10 +20,12 @@ test_queue.o: test_queue.c queue.h
 queue.o: queue.c queue.h
 	$(CC) $(DEBUG) -o queue.o queue.c -c $(CFLAGS)
 
+semlib.o: semlib.c semlib.h
+	$(CC) $(DEBUG) -o semlib.o semlib.c -c $(CFLAGS)
+
 clean:
-	# remove binares
+	# Deletes binaries and objects
 	find . -type f -executable -exec sh -c "file -i '{}' | grep -q 'x-executable; charset=binary'" \; -print | xargs rm -f
-	# remove object files
 	rm *.o
 	
 debug: DEBUG = -D _DEBUG
