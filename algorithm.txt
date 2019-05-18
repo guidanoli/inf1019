@@ -54,3 +54,34 @@
   13: Literally do nothing.
   15: From the current queue, give a signal to the process whose pid
   is stored in the node removed (TEMPORARLY)
+  
+  Communication:
+  -------------
+  
+  The scheduler will signal its programs with the following signals:
+    SIGSTOP - Tells its son to stop
+    SIGCNT - Tells it to resume executing
+  
+  And the programs will likewise signal the scheduler with:
+    SIGUSR1 - The program has entered I/O
+    SIGCHD - The program has ended
+  
+  SIGSTOP:
+    When a program has entered I/O or has ended its quantum, the
+    scheduler will preemptively stop its process.
+  
+  SIGCNT:
+    When a program has entered its quantum, it has to be awakened from
+    its deep sleep.
+    
+  SIGUSR1 (I/O):
+    When the program enters  I/O by signalling the scheduller with the
+    signal SIGUSR1, it creates a thread that holds the program pid and
+    stops it, waits some time (in this case, 3 seconds), and then puts
+    it on the queue with one level higher of priority.
+  
+  SIGCHD:
+    When the program dies, the scheduler has remove it from its
+    internal structure.
+  
+  
