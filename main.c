@@ -80,16 +80,20 @@
     /* create queues */
     if((ret=create_queues())!=0) return ret;
     
-    /* parse args from stdin and build queues */
-    if((ret=init_interpreter())!=0) return ret;
-    
     /* initialize semaphore */
     if((semId = semCreate(SEM_KEY))==-1) return EXIT_FAILURE;
     if(semInit(semId)==-1) return EXIT_FAILURE;
     
-    /* initialize signal handlers */
+    /* initialize signal handlers for interpreter */
+    signal(SIGUSR2,signalHandler);
+    
+    /* parse args from stdin and build queues */
+    if((ret=init_interpreter())!=0) return ret;
+    
+    /* initialize signal handlers for scheduler */
     signal(SIGUSR1,signalHandler);
     signal(SIGCHLD,signalHandler);
+    signal(SIGUSR2,SIG_DFL);
     
     /* start from queue of highest priority */
     setCurrentQueue(0);
@@ -109,10 +113,7 @@
       // not modify it.
       queue = getUpdatedQueue();
       quantum = getQueueQuantum(current_queue.id);
-      printf("%d\n",qhead_empty(aux_queue));
-      printf("%d\n",!qhead_empty(queue));
-      break;
-      while( !qhead_empty(queue) )
+      while( qhead_empty(queue) == QUEUE_FALSE )
       {
         //empty queue -> aux
         /////////////////////////////////
@@ -166,6 +167,10 @@
         return fatal_error("Erro ao administrar filas auxiliares\n");
     }
     
+    #ifdef _DEBUG
+    printf("Ended.\n");
+    #endif
+    
     /* safely destroying semaphore */
     semDestroy(semId);
     
@@ -191,17 +196,17 @@
   
   int create_queues(void)
   {  
-    if( qhead_create(&aux_queue,0) != 0 )
+    if( qhead_create(&aux_queue,-1) != 0 )
         return fatal_error("Falha ao criar fila auxiliar.\n");
     for( int i = 0 ; i < N_OF_QUEUES ; i++ )
-      if( qhead_create(proc_queues+i,i+1) != 0 )
-        return fatal_error("Falha ao crier fila #%d.\n",i+1);
+      if( qhead_create(proc_queues+i,i) != 0 )
+        return fatal_error("Falha ao crier fila #%d.\n",i);
     return 0;
   }
 
   void destroy_queues(void)
   {
-    qhead_destroy(aux_queue);
+    qhead_destroy(&aux_queue);
     for( int i = 0 ; i < N_OF_QUEUES ; i++ )
       qhead_destroy(proc_queues+i);
   }
@@ -242,7 +247,7 @@
   
   int myPow2(int exp) { return 1<<exp; }
   
-  int getQueueRuns(int id) { return myPow2(N_OF_QUEUES-id); }
+  int getQueueRuns(int id) { return myPow2(N_OF_QUEUES-id-1); }
   
   int getQueueQuantum(int id) { return myPow2(id)*SMALLEST_QUANTUM; }
     
@@ -252,7 +257,7 @@
     procpack * pack = (procpack *) malloc(sizeof(procpack));
     if( pack == NULL ){
       fprintf(stderr,"Não foi possível alocar espaço na memória.\n");
-      exit(1); //abort program
+      exit(0); //abort program
     }
     pack->process = current_proc.node;
     pack->queue = getQueueFromId(getHigherPriorityQueueId(current_queue.id));
@@ -260,12 +265,15 @@
   }
   
   void signalHandler(int signo)
-  {
+  {    
     if( signo == SIGUSR1 )
     {
       int pid;
       void * info;
       pthread_t thread;
+      #ifdef _DEBUG
+      printf("SIGUSR Called!");
+      #endif
       /////////////////////////////////
       // ENTERS CRITICAL REGION
       // Manipulates current process
@@ -292,6 +300,7 @@
       if( io_threads > processes_count )
       {
         printf("#Threads > #Processes ! ! !\n");
+        exit(0);
       }
       #endif
     }
@@ -316,6 +325,12 @@
       // EXITS CRITICAL REGION
       /////////////////////////////////
     }
+    else if( signo == SIGUSR2 )
+    {
+      #ifdef _DEBUG
+      printf("Processo pai chama SIGSTOP ao filho\n");
+      #endif
+    }
   }
   
   void * ioProcessHandler(void * info)
@@ -324,8 +339,8 @@
     qnode io_proc;
     qhead new_queue;
     int pid;
-    signal(SIGUSR1,SIG_IGN);
-    signal(SIGCHLD,SIG_IGN);
+    signal(SIGUSR1,SIG_DFL);
+    signal(SIGCHLD,SIG_DFL);
     pid = qnode_getid(io_proc);
     pack = (procpack *) info;
     io_proc = pack->process;
@@ -392,29 +407,35 @@
       if((pid = fork()) == 0)
       {
         char * args[QTD_ARGS];
+        #ifdef _DEBUG
+        char buffer[QTD_ARGS*(ARG_SIZE+1)+1] = "";
+        #endif
         for( int i = 0 ; i < qt_raj+2 ; i++ )
         {
           args[i] = (char *) malloc(sizeof(char)*ARG_SIZE);
           if( i == 0 ) strcpy(args[0],prog);
           else if( i < qt_raj+1 ) sprintf(args[i],"%d",raj[i-1]);
           #ifdef _DEBUG
-          if( i < qt_raj+1 ) printf("args[%d] = %s\n",i,args[i]);
+          if( i < qt_raj+1 )
+          {
+            strcat(buffer,args[i]);
+            strcat(buffer," ");
+          }
           #endif
         }
         args[qt_raj+1] = NULL;
         #ifdef _DEBUG
-        printf("Entrando...\n");
+        printf("Executando... %s\n",buffer);
         #endif
         if( execv(*args,args) == -1 )
         {
           return fatal_error("Could not execute program %d.\n",getpid());
         }
+        exit(0);
       }
       else
       {
-        #ifdef _DEBUG
-        printf("Fazendo o processo filho parar\n");
-        #endif
+        sleep(100);
         kill(pid,SIGSTOP);
         qnode process;
         if( qnode_create(&process,pid) != 0 )
@@ -423,7 +444,9 @@
           return EXIT_FAILURE;
         }
         qhead_ins(proc_queues[0],process);
+        sleep(1);
         processes_count++;
+        printf("process_count = %d\n",processes_count);
         #ifdef _DEBUG
         printf("[%d] inserido em F1\n",pid);
         #endif
