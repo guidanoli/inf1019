@@ -9,7 +9,12 @@
 
   int locked = 1;
 
-  void handler(int signo) { locked = 0; }
+  void handler(int signo) {
+    if( signo == SIGUSR1 || signo == SIGCONT )
+      locked = 0;
+    else if( signo == SIGSTOP )
+      locked = 1;
+  }
 
   int main(int argc, char ** argv)
   {

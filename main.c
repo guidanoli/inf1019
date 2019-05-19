@@ -25,6 +25,11 @@
     IO,
     TERMINATED,
   } proc_status;
+  
+  typedef enum {
+    MANAGING,
+    EXECUTING,
+  } schdlr_status;
     
   typedef struct process_s {
     qnode node;
@@ -47,8 +52,10 @@
   qhead aux_queue = NULL;
   process current_proc;
   procqueue current_queue;
+  schdlr_status my_status = MANAGING;
   int processes_count = 0;
   int io_threads = 0;
+  int signal_lock = 0;
   
   // semaphore
   int semId = 0;
@@ -101,7 +108,7 @@
     #ifdef _DEBUG
     printf("Beggining main loop...\n");
     #endif
-    
+        
     /* main loop */
     while( 1 )
     {
@@ -132,8 +139,14 @@
         // EXITS CRITICAL REGION
         /////////////////////////////////
         
-        kill(pid,SIGCONT);
+
+        
+        my_status = EXECUTING;
+        signal_lock = 1;
+        kill(pid,SIGCONT);                
         sleep(quantum); // z z z ...
+        while(signal_lock);
+        my_status = NORMAL;
         kill(pid,SIGSTOP);
         
         // sleep(1); -- see if it is necessary
@@ -302,28 +315,33 @@
         printf("#Threads > #Processes ! ! !\n");
         exit(0);
       }
+      signal_lock = 0;
       #endif
     }
     else if( signo == SIGCHLD )
     {
-      qnode dead_node;
-      /////////////////////////////////
-      // ENTERS CRITICAL REGION
-      // Manipulates  the process status
-      // flag and the current queue
-      /////////////////////////////////
-      enterCR(semId);
-      /////////////////////////////////
-      dead_node = current_proc.node;
-      processes_count--;
-      qnode_destroy(dead_node);
-      current_proc.status = TERMINATED;
-      current_proc.node = NULL;
-      /////////////////////////////////
-      exitCR(semId);
-      /////////////////////////////////
-      // EXITS CRITICAL REGION
-      /////////////////////////////////
+      if( my_status == EXECUTING )
+      {
+        qnode dead_node;
+        /////////////////////////////////
+        // ENTERS CRITICAL REGION
+        // Manipulates  the process status
+        // flag and the current queue
+        /////////////////////////////////
+        enterCR(semId);
+        /////////////////////////////////
+        dead_node = current_proc.node;
+        processes_count--;
+        qnode_destroy(&dead_node);
+        current_proc.status = TERMINATED;
+        current_proc.node = NULL;
+        /////////////////////////////////
+        exitCR(semId);
+        /////////////////////////////////
+        // EXITS CRITICAL REGION
+        /////////////////////////////////
+      }
+      signal_lock = 0;
     }
     else if( signo == SIGUSR2 )
     {
