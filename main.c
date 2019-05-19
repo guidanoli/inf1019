@@ -137,17 +137,28 @@
         exitCR(semId);
         /////////////////////////////////
         // EXITS CRITICAL REGION
-        /////////////////////////////////
+        /////////////////////////////////        
         
-
-        
-        my_status = EXECUTING;
         signal_lock = 1;
-        kill(pid,SIGCONT);                
-        sleep(quantum); // z z z ...
+        kill(pid,SIGCONT);
         while(signal_lock);
+        my_status = EXECUTING;
+        sleep(quantum); // z z z ...
+        
+        /////////////////////////////////
+        // ENTERS CRITICAL REGION
+        // Manipulates current process
+        // and current queue
+        /////////////////////////////////
+        enterCR(semId);
+        /////////////////////////////////
         my_status = NORMAL;
         kill(pid,SIGSTOP);
+        /////////////////////////////////
+        exitCR(semId);
+        /////////////////////////////////
+        // EXITS CRITICAL REGION
+        /////////////////////////////////
         
         // sleep(1); -- see if it is necessary
         // will signalHandler be called soon
@@ -164,10 +175,17 @@
         if( current_proc.status == NORMAL )
         {
           int new_queue_id = getLowerPriorityQueueId(current_queue.id);
+          printf("Process %d exceeded its quantum.\n",qnode_getid(current_proc.node));
           if( new_queue_id == current_queue.id )
+          {
             qhead_ins(aux_queue,current_proc.node);
+            printf("Process %d will stay on queue #%d.\n",qnode_getid(current_proc.node),new_queue_id);
+          }
           else
+          {
             qhead_ins(getQueueFromId(new_queue_id),current_proc.node);
+            printf("Process %d will go from queue #%d to #%d\n",qnode_getid(current_proc.node),current_queue.id, new_queue_id);
+          }
           current_proc.node = NULL;
         }
         /////////////////////////////////
@@ -323,6 +341,7 @@
       if( my_status == EXECUTING )
       {
         qnode dead_node;
+        printf("Goodbye cruel world...\n");
         /////////////////////////////////
         // ENTERS CRITICAL REGION
         // Manipulates  the process status

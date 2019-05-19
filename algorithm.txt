@@ -133,6 +133,20 @@
   check if io_processes count is zero, and, if so, it has to wake up
   (signal SIGUSR2) the scheduler.
   
+  SIGCHLD:
+  -------
+  
+  This signal is called whenever a child process is terminated, or
+  interrupted or resumed. That means that there needs to be some filtering
+  and process only those generated when the program is terminated.
+  
+  This is done by creating a program status, which can be:
+  * MANAGING (or normal)
+  * EXECUTING
+  
+  ...when executing, SIGCHLD necessairly means that the child process
+  was terminates. Anywhere else in the main function, the scheduler is
+  managing, and SIGCHLD will be ignored.
   
   Alternative Algorithm (in pseudo-code, but more progamatic)
   ---------------------

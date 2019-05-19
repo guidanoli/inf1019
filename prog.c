@@ -10,10 +10,7 @@
   int locked = 1;
 
   void handler(int signo) {
-    if( signo == SIGUSR1 || signo == SIGCONT )
-      locked = 0;
-    else if( signo == SIGSTOP )
-      locked = 1;
+    locked = 0;
   }
 
   int main(int argc, char ** argv)
@@ -28,6 +25,7 @@
     #ifdef _DEBUG
     printf("Processo filho %d rodando!\n",pid);
     #endif
+    signal(SIGCONT,SIG_DFL);
 	  for( int i = 1 ; i < argc ; i++ )
 	  {
 	    for( int j = 0 ; j < atoi(argv[i]) ; j++ )

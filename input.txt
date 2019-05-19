@@ -1,1 +1,1 @@
-exec prog (1)
+exec prog (10)
