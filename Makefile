@@ -1,7 +1,7 @@
 # Makefile
 # Guilherme Dantas
 
-CFLAGS = -w -pthread
+CFLAGS = -w
 
 all: testq main prog
 
