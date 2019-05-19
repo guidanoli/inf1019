@@ -5,18 +5,21 @@
   #ifndef _H_QUEUE
   #define _H_QUEUE
 
-  typedef struct queue_head_s * qhead;
-  typedef struct queue_node_s * qnode;
+  #define QFLAG_TRANSFER_ALL -1
 
   ///////////////////////////////////////////
   // QUEUE MODULE CONSTANTS
   ///////////////////////////////////////////
+  
+  typedef struct queue_head_s * qhead;
+  typedef struct queue_node_s * qnode;
 
   typedef enum {
     QUEUE_OK ,
     QUEUE_FALSE ,
     QUEUE_NULL ,
-    QUEUE_MEM
+    QUEUE_MEM ,
+    QUEUE_PARAM
   } queue_ret;
 
   ///////////////////////////////////////////
@@ -50,7 +53,8 @@
 
   // Check if head is empty (no nodes)
   // head is pointer to head
-  // Returns OK, FALSE or NULL
+  // [!] Don't use 1 or 0, use the ret values!!!
+  // Returns QUEUE_OK, QUEUE_FALSE or NULL
   queue_ret qhead_empty ( qhead head );
 
   // Get head id
@@ -68,6 +72,16 @@
   // Returns  node if successful or
   //          NULL if head is NULL or queue is empty
   qnode qhead_rm ( qhead head );
+  
+  // Transfers qtd nodes from src to dest
+  // src is pointer to source queue
+  // dest is pointer to destintation queue
+  // qtd is the quantity of nodes to be transfered
+  // Returns QUEUE_OK, QUEUE_NULL
+  // if qtd == QFLAG_TRANSFER_ALL (-1), src will be emptied and
+  // all its nodes will be inserted in dest
+  // if qtd < -1, nothing will be done, and QUEUE_PARAM will be returned
+  queue_ret qhead_transfer( qhead src , qhead dest , int qtd );
 
   // Destroy head and its nodes
   // head is pointer to pointer to head

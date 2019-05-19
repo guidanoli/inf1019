@@ -10,20 +10,47 @@
   #include <sys/wait.h>
   #include <stdarg.h>
   #include <string.h>
+  #include <pthread.h>
   #include "queue.h"
   
-  #define QTD_FILAS 3
+  #define SMALLEST_QUANTUM 1
+  #define IO_BLOCK_TIME 3
+  #define N_OF_QUEUES 3
   #define ARG_SIZE 64
   #define QTD_ARGS 16
   #define SEM_KEY 123456789
-
-  // variables
-  qhead filas[QTD_FILAS];
+  
+  typedef enum {
+    NORMAL,
+    IO,
+    TERMINATED,
+  } proc_status;
+    
+  typedef struct process_s {
+    qnode node;
+    proc_status status;
+  } process;
+  
+  typedef struct process_queue_s {
+    qhead queue;
+    int id;
+    int runs_left;
+  } procqueue;
+  
+  typedef struct process_package_s {
+    qnode process;
+    qhead queue;
+  } procpack;
+  
+  // processes and queues
+  qhead proc_queues[N_OF_QUEUES];
   qhead aux_queue = NULL;
-  qnode current_process = NULL;
-  int current_queue_id = 0;
-  int queue_runs_left = 0;
-  int io_processes = 0;
+  process current_proc;
+  procqueue current_queue;
+  int processes_count = 0;
+  int io_threads = 0;
+  
+  // semaphore
   int semId = 0;
   
   // functions
@@ -34,12 +61,21 @@
   int myPow2(int exp);
   int getQueueRuns(int id);
   int getQueueQuantum(int id);
-  qhead getCurrentQueue();
+  int getHigherPriorityQueueId(int id);
+  int getLowerPriorityQueueId(int id);
+  qhead getQueueFromId(int id);
+  qhead getUpdatedQueue();
   void setCurrentQueue(int id);
+  void forceNextQueue();
+  void signalHandler(int signo);
+  void * ioProcessHandler(void * info);
+  procpack * getCurrentProcessPackage();
 
   int main(int argc, char ** argv)
   {
-    int ret;
+    int ret = 0, quantum = 0;
+    qhead queue;
+    pid_t pid;
     
     /* create queues */
     if((ret=create_queues())!=0) return ret;
@@ -48,15 +84,86 @@
     if((ret=init_interpreter())!=0) return ret;
     
     /* initialize semaphore */
-    semId = semCreate(SEM_KEY);
+    if((semId = semCreate(SEM_KEY))==-1) return EXIT_FAILURE;
+    if(semInit(semId)==-1) return EXIT_FAILURE;
+    
+    /* initialize signal handlers */
+    signal(SIGUSR1,signalHandler);
+    signal(SIGCHLD,signalHandler);
     
     /* start from queue of highest priority */
     setCurrentQueue(0);
     
+    #ifdef _DEBUG
+    printf("Beggining main loop...\n");
+    #endif
+    
     /* main loop */
     while( 1 )
     {
+      if( processes_count <= 0 ) break;
+      // there is no need for mutex here
+      // since the processes_count only
+      // decreases and it only reads the
+      // content of process_count and does
+      // not modify it.
+      queue = getUpdatedQueue();
+      quantum = getQueueQuantum(current_queue.id);
+      printf("%d\n",qhead_empty(aux_queue));
+      printf("%d\n",!qhead_empty(queue));
       break;
+      while( !qhead_empty(queue) )
+      {
+        //empty queue -> aux
+        /////////////////////////////////
+        // ENTERS CRITICAL REGION
+        // Manipulates current process
+        // and current queue
+        /////////////////////////////////
+        enterCR(semId);
+        /////////////////////////////////
+        current_proc.node = qhead_rm(queue);
+        current_proc.status = NORMAL;
+        pid = qnode_getid(current_proc.node);
+        /////////////////////////////////
+        exitCR(semId);
+        /////////////////////////////////
+        // EXITS CRITICAL REGION
+        /////////////////////////////////
+        
+        kill(pid,SIGCONT);
+        sleep(quantum); // z z z ...
+        kill(pid,SIGSTOP);
+        
+        // sleep(1); -- see if it is necessary
+        // will signalHandler be called soon
+        // enough so that the current process
+        // status will be changed before
+        // checking it in the following CR?
+        
+        /////////////////////////////////
+        // ENTERS CRITICAL REGION
+        // Manipulates current process
+        /////////////////////////////////
+        enterCR(semId);
+        /////////////////////////////////
+        if( current_proc.status == NORMAL )
+        {
+          int new_queue_id = getLowerPriorityQueueId(current_queue.id);
+          if( new_queue_id == current_queue.id )
+            qhead_ins(aux_queue,current_proc.node);
+          else
+            qhead_ins(getQueueFromId(new_queue_id),current_proc.node);
+          current_proc.node = NULL;
+        }
+        /////////////////////////////////
+        exitCR(semId);
+        /////////////////////////////////
+        // EXITS CRITICAL REGION
+        /////////////////////////////////
+      }
+      if( qhead_transfer(aux_queue,queue,QFLAG_TRANSFER_ALL) != QUEUE_OK )
+        return fatal_error("Erro ao administrar filas auxiliares\n");
     }
     
     /* safely destroying semaphore */
@@ -68,6 +175,10 @@
     /* end scheduler */
 	  return EXIT_SUCCESS;
   }
+  
+  ///////////////////////////////
+  // Functions' implementation //
+  ///////////////////////////////
   
   int fatal_error(const char * err_msg_format, ...)
   {
@@ -82,8 +193,8 @@
   {  
     if( qhead_create(&aux_queue,0) != 0 )
         return fatal_error("Falha ao criar fila auxiliar.\n");
-    for( int i = 0 ; i < QTD_FILAS ; i++ )
-      if( qhead_create(filas+i,i+1) != 0 )
+    for( int i = 0 ; i < N_OF_QUEUES ; i++ )
+      if( qhead_create(proc_queues+i,i+1) != 0 )
         return fatal_error("Falha ao crier fila #%d.\n",i+1);
     return 0;
   }
@@ -91,37 +202,173 @@
   void destroy_queues(void)
   {
     qhead_destroy(aux_queue);
-    for( int i = 0 ; i < QTD_FILAS ; i++ )
-      qhead_destroy(filas+i);
+    for( int i = 0 ; i < N_OF_QUEUES ; i++ )
+      qhead_destroy(proc_queues+i);
   }
   
-  qhead getCurrentQueue()
+  qhead getQueueFromId(int id)
   {
-    if( queue_runs_left == 0 )
-      setCurrentQueue((current_queue_id+1)%QTD_FILAS);
-    queue_runs_left--;
-    return filas[current_queue_id];
+    return proc_queues[id%N_OF_QUEUES];
+  }
+  
+  qhead getUpdatedQueue()
+  {
+    if( current_queue.runs_left == 0 ) forceNextQueue();
+    current_queue.runs_left--; // already wastes by calling
+    return getQueueFromId(current_queue.id);
+  }
+  
+  void forceNextQueue()
+  {
+    setCurrentQueue((current_queue.id+1)%N_OF_QUEUES);
   }
   
   void setCurrentQueue(int id)
   {
-    current_queue_id = id;
-    queue_runs_left = getQueueRuns(id);
+    /////////////////////////////////
+    // ENTERS CRITICAL REGION
+    // Manipulates current queue
+    /////////////////////////////////
+    enterCR(semId);
+    /////////////////////////////////
+    current_queue.id = id;
+    current_queue.runs_left = getQueueRuns(id);
+    /////////////////////////////////
+    exitCR(semId);
+    /////////////////////////////////
+    // EXITS CRITICAL REGION
+    /////////////////////////////////
   }
   
   int myPow2(int exp) { return 1<<exp; }
   
-  int getQueueRuns(int id) { return myPow2(QTD_FILAS-id); }
+  int getQueueRuns(int id) { return myPow2(N_OF_QUEUES-id); }
   
-  int getQueueQuantum(int id) { return myPow2(QTD_FILAS); }
-      
+  int getQueueQuantum(int id) { return myPow2(id)*SMALLEST_QUANTUM; }
+    
+  // [!] NOT SAFE WITH SEMAPHORES - MUST USE WHEN CALLING
+  procpack * getCurrentProcessPackage()
+  {
+    procpack * pack = (procpack *) malloc(sizeof(procpack));
+    if( pack == NULL ){
+      fprintf(stderr,"Não foi possível alocar espaço na memória.\n");
+      exit(1); //abort program
+    }
+    pack->process = current_proc.node;
+    pack->queue = getQueueFromId(getHigherPriorityQueueId(current_queue.id));
+    return pack;
+  }
+  
+  void signalHandler(int signo)
+  {
+    if( signo == SIGUSR1 )
+    {
+      int pid;
+      void * info;
+      pthread_t thread;
+      /////////////////////////////////
+      // ENTERS CRITICAL REGION
+      // Manipulates current process
+      // and current queue. Later on,
+      // another queue too.
+      /////////////////////////////////
+      enterCR(semId);
+      /////////////////////////////////
+      // proccess has entered I/O
+      // a thread will handle it properly
+      pid = qnode_getid(current_proc.node);
+      kill(pid,SIGSTOP);
+      info = (void *) getCurrentProcessPackage(); // inside semaphore
+      pthread_create(&thread,NULL,ioProcessHandler,info);
+      current_proc.status = IO;
+      current_proc.node = NULL;
+      io_threads++;
+      /////////////////////////////////
+      exitCR(semId);
+      /////////////////////////////////
+      // EXITS CRITICAL REGION
+      /////////////////////////////////
+      #ifdef _DEBUG
+      if( io_threads > processes_count )
+      {
+        printf("#Threads > #Processes ! ! !\n");
+      }
+      #endif
+    }
+    else if( signo == SIGCHLD )
+    {
+      qnode dead_node;
+      /////////////////////////////////
+      // ENTERS CRITICAL REGION
+      // Manipulates  the process status
+      // flag and the current queue
+      /////////////////////////////////
+      enterCR(semId);
+      /////////////////////////////////
+      dead_node = current_proc.node;
+      processes_count--;
+      qnode_destroy(dead_node);
+      current_proc.status = TERMINATED;
+      current_proc.node = NULL;
+      /////////////////////////////////
+      exitCR(semId);
+      /////////////////////////////////
+      // EXITS CRITICAL REGION
+      /////////////////////////////////
+    }
+  }
+  
+  void * ioProcessHandler(void * info)
+  {
+    procpack * pack;
+    qnode io_proc;
+    qhead new_queue;
+    int pid;
+    signal(SIGUSR1,SIG_IGN);
+    signal(SIGCHLD,SIG_IGN);
+    pid = qnode_getid(io_proc);
+    pack = (procpack *) info;
+    io_proc = pack->process;
+    new_queue = pack->queue;
+    free(info);
+    sleep(IO_BLOCK_TIME); // simulating IO
+    /////////////////////////////////
+    // ENTERS CRITICAL REGION
+    // Manipulates io_process and
+    // any of the process queues
+    /////////////////////////////////
+    enterCR(semId);
+    /////////////////////////////////
+    qhead_ins(new_queue,io_proc);
+    /////////////////////////////////
+    exitCR(semId);
+    /////////////////////////////////
+    // EXITS CRITICAL REGION
+    /////////////////////////////////
+    pthread_exit(NULL); // end thread
+  }
+  
+  int getHigherPriorityQueueId(int id)
+  {
+    if(id <= 0) return 0;
+    return (id-1)%N_OF_QUEUES;
+  }
+  
+  int getLowerPriorityQueueId(int id)
+  {
+    if(id >= N_OF_QUEUES-1) return N_OF_QUEUES-1;
+    return (id+1)%N_OF_QUEUES;
+  }
+   
   int init_interpreter()
   {
-    char args[QTD_ARGS][ARG_SIZE], prog[ARG_SIZE], c;
-    int raj[QTD_ARGS];
+    char c;
     pid_t pid;
+    /* parse args from stdin */
     while((c = fgetc(stdin)) == 'e')
     {
+      char prog[ARG_SIZE] = "";
+      int raj[QTD_ARGS];
       int qt_raj = 1;
       
       if( scanf("xec %s (%d",prog,raj) != 2 )
@@ -144,15 +391,17 @@
       
       if((pid = fork()) == 0)
       {
+        char * args[QTD_ARGS];
         for( int i = 0 ; i < qt_raj+2 ; i++ )
         {
+          args[i] = (char *) malloc(sizeof(char)*ARG_SIZE);
           if( i == 0 ) strcpy(args[0],prog);
           else if( i < qt_raj+1 ) sprintf(args[i],"%d",raj[i-1]);
           #ifdef _DEBUG
           if( i < qt_raj+1 ) printf("args[%d] = %s\n",i,args[i]);
           #endif
         }
-        strcpy(args[qt_raj+1],'\0');
+        args[qt_raj+1] = NULL;
         #ifdef _DEBUG
         printf("Entrando...\n");
         #endif
@@ -173,18 +422,15 @@
           fprintf(stderr,"Não foi possível alocar espaço na memória.\n");
           return EXIT_FAILURE;
         }
-        /* inserts all processes in the high-priority queue */
-        qhead_ins(filas[0],process);
+        qhead_ins(proc_queues[0],process);
+        processes_count++;
         #ifdef _DEBUG
         printf("[%d] inserido em F1\n",pid);
         #endif
       }
     } /* end parsing */
-    return 0;
+    return EXIT_SUCCESS;
   }
-  
-  
-  
   
   
   

@@ -5,23 +5,23 @@
   #include <stdio.h>
   #include <stdlib.h>
   #include <unistd.h>
+  #include <signal.h>
 
   int main(int argc, char ** argv)
   {
-    #ifdef _DEBUG
-    printf("pid = %d\n",getpid());
-    for( int i = 0 ; i < argc ; i++ )
-      printf("%s ",argv[i]);
-    printf("\n");
-    #endif
+    int ppid = getppid(), pid = getpid();
 	  for( int i = 1 ; i < argc ; i++ )
 	  {
 	    for( int j = 0 ; j < atoi(argv[i]) ; j++ )
 	    {
-	      printf("%d\n",getpid());
+	      printf("%d\n",pid);
 	      sleep(1); // CPU
 	    }
-	    if( i < argc - 1 ) sleep(3); // IO
+	    if( i < argc - 1 )
+	    {
+        printf("%d [io]\n",pid);
+	      kill(ppid,SIGUSR1); // I am entering IO!
+      }
 	  }
 	  return 0;
   }

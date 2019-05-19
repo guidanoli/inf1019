@@ -28,7 +28,7 @@
   or scheduled. The first, for ever; The last, only on its quantum.
   - There are 3 queues: F1, F2, F3. One has a higher priority than
   the other. F1 > F2 > F3. On the other hand, their quantum are
-  inversevly proportional to their priority. That is, in terms of
+  inversely proportional to their priority. That is, in terms of
   time run by a process in F1 is smaller than on F2, and so on.
   - When initialized, the scheduler puts all procedures in F1.
   - The scheduler runs fully each queue depending on its priority.
@@ -39,7 +39,7 @@
   Pseudo-code explanation:
   
   2: We know all procedures have terminated when all queues are empty
-  and the current procedure pointer is null
+  and no procedures are executing I/O tasks.
   5: If the procedure pointer is null, no procedure is running
   6: 7: The scheduler will wait T u.t. (determined by the current
   procedure's queue) and when done, will stop the current procedure.
@@ -75,7 +75,7 @@
     its deep sleep.
     
   SIGUSR1 (I/O):
-    When the program enters  I/O by signalling the scheduller with the
+    When the program enters  I/O by signalling the scheduler with the
     signal SIGUSR1, it creates a thread that holds the program pid and
     stops it, waits some time (in this case, 3 seconds), and then puts
     it on the queue with one level higher of priority.
@@ -112,26 +112,61 @@
   all processes have entered I/O and next time the scheduler checks if
   there are any running processes or processes in any queue, it finds none
   and terminates. This occurrs because in this naive implementation, the
-  scheduller was not aware of the processes on I/O waiting to be inserted
+  scheduler was not aware of the processes on I/O waiting to be inserted
   again on the queues.
   
   This problem can be solved by the use of a thread counter that is
-  increased before the scheduller creates a thread for a proccess that
+  increased before the scheduler creates a thread for a proccess that
   will be entering I/O, and decreased when a given thread is terminated.
   
   Obviously, the use of mutexes is undeniably fundamental to keep the
-  data consistent.
+  counter consistent.
   
-  That way, the schuller not only has to check for processes in its queues
-  but all if there are any currently enrolled in an I/O task.
+  That way, the scheduler not only has to check for processes in its queues
+  but also if there is any thread currently handling a process in I/O.
+  
+  Future improvements:
+  -------------------  
+  
+  * Make scheduler sleep when there are I/O bound processes running but
+  none on CPU (queues). Before a I/O process handler thread terminates,
+  check if io_processes count is zero, and, if so, it has to wake up
+  (signal SIGUSR2) the scheduler.
   
   
+  Alternative Algorithm (in pseudo-code, but more progamatic)
+  ---------------------
   
-  
-  
-  
-  
-  
+  1   def scheduler
+  2   | while number of processes > 0
+  3   | | queue <- new_queue()
+  4   | | quantum <- queue quantum
+  5   | | while queue isn't empty
+  6   | | | process <- first node from queue
+  7   | | | resume process
+  8   | | | wait until quantum or io signal
+  9   | | | stop process
+  10  | | | switch(cause of stop)
+  11  | | | | io?
+  12  | | | | | create a thread to do:
+  13  | | | | | | wait io blocking time
+  14  | | | | | | move process queue with higher priority            
+  15  | | | | terminated?
+  16  | | | | | remove process from queue
+  17  | | | | | decrease number of processes
+  18  | | | | exceeded quantum?
+  19  | | | | | new queue <- lower_priority(queue)
+  20  | | | | | is new queue == queue?
+  21  | | | | | | move process to auxiliary queue
+  22  | | | | | else
+  23  | | | | | | move process to new queue
+  24  | | | | | end
+  25  | | | | end
+  26  | | | end
+  27  | | end
+  28  | | move all nodes from auxiliary queue to queue
+  29  | end
+  30  end
   
   
   

@@ -6,13 +6,16 @@ CFLAGS = -w
 all: testq main prog
 
 main: prog main.o queue.o semlib.o
-	$(CC) $(DEBUG) -o main main.o queue.o semlib.o $(CFLAGS)
+	$(CC) $(DEBUG) -o main main.o queue.o semlib.o $(CFLAGS) -lpthread 
 	
 testq: test_queue.o queue.o
 	$(CC) $(DEBUG) -o testq test_queue.o queue.o $(CFLAGS)
 	
 prog: prog.c
 	$(CC) $(DEBUG) -o prog prog.c $(CFLAGS)
+
+main.o: main.c queue.h semlib.h
+	$(CC) $(DEBUG) -o main.o main.c -c $(CFLAGS)
 
 test_queue.o: test_queue.c queue.h
 	$(CC) $(DEBUG) -o test_queue.o test_queue.c -c $(CFLAGS)

@@ -29,7 +29,7 @@
 
   int main( void )
   {
-    qhead head;
+    qhead head, other;
     qnode node;
     int aux, i;
 
@@ -107,6 +107,29 @@
     assert(head==NULL);
     assert(aux==0); // #inserted = #removed
     
+    qhead_create(&head,123);
+    qhead_create(&other,456);
+    for( int i = 0 ; i < 10 ; i++ )
+    {
+      qnode_create(&node,i);
+      qhead_ins(head,node);
+    }
+    
+    assert(qhead_empty(head)==QUEUE_FALSE);
+    assert(qhead_empty(other)==QUEUE_OK);
+    assert(qhead_transfer(head,other,1)==QUEUE_OK);
+    assert(qhead_empty(head)==QUEUE_FALSE);
+    assert(qhead_empty(other)==QUEUE_FALSE);
+    assert(qhead_transfer(head,other,9)==QUEUE_OK);
+    assert(qhead_empty(head)==QUEUE_OK);
+    assert(qhead_empty(other)==QUEUE_FALSE);
+    assert(qhead_transfer(other,head,QFLAG_TRANSFER_ALL)==QUEUE_OK);
+    assert(qhead_empty(head)==QUEUE_FALSE);
+    assert(qhead_empty(other)==QUEUE_OK);
+    
+    qhead_destroy(&head);
+    qhead_destroy(&other);
+        
     // show log
     show_log();
     

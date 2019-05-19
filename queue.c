@@ -85,7 +85,8 @@
 
   // Check if head is empty (no nodes)
   // head is pointer to head
-  // Returns OK, FALSE or NULL
+  // [!] Don't use 1 or 0, use the ret values!!!
+  // Returns QUEUE_OK, QUEUE_FALSE or NULL
   queue_ret qhead_empty ( qhead head )
   {
     if( head == NULL ) return QUEUE_NULL;
@@ -133,6 +134,23 @@
     if( node == head->end ) head->end = NULL;
     head->ini = node->next;
     return node;
+  }
+
+  // Transfers qtd nodes from src to dest
+  // src is pointer to source queue
+  // dest is pointer to destintation queue
+  // qtd is the quantity of nodes to be transfered
+  // Returns QUEUE_OK, QUEUE_NULL
+  // if qtd == QFLAG_TRANSFER_ALL (-1), src will be emptied and
+  // all its nodes will be inserted in dest
+  // if qtd < -1, nothing will be done, and QUEUE_PARAM will be returned
+  queue_ret qhead_transfer( qhead src , qhead dest , int qtd )
+  {
+    if( src == NULL || dest == NULL ) return QUEUE_NULL;
+    if( qtd <= 0 && qtd != QFLAG_TRANSFER_ALL ) return QUEUE_PARAM;
+    for(; qtd != 0 && qhead_empty(src)==QUEUE_FALSE;qtd--)
+      qhead_ins(dest,qhead_rm(src));
+    return QUEUE_OK;
   }
 
   // Destroy head and its nodes
