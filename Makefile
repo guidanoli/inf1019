@@ -1,12 +1,12 @@
 # Makefile
 # Guilherme Dantas
 
-CFLAGS = -w
+CFLAGS = -w -pthread
 
-all: testq main
+all: testq main prog
 
 main: prog main.o queue.o semlib.o
-	$(CC) $(DEBUG) -o main main.o queue.o $(CFLAGS)
+	$(CC) $(DEBUG) -o main main.o queue.o semlib.o $(CFLAGS)
 	
 testq: test_queue.o queue.o
 	$(CC) $(DEBUG) -o testq test_queue.o queue.o $(CFLAGS)

@@ -1,7 +1,7 @@
   
   #ifndef _H_SEMAPHORE_LIBRARY
   #define _H_SEMAPHORE_LIBRARY
-  
+   
   ////////////////////////////////////
   //                                //
   // SEMAPHORES - Do Not Touch !!!  //
@@ -13,7 +13,12 @@
   //                                //
   ////////////////////////////////////
   
+  // creates sempahore
+  // key must be unique
+  // returns semId
+  int semCreate(int key);
   // initalize semaphore
+  // returns -1 on error
   int semInit(int semId);
   // destroy semaphore
   void semDestroy(int semId);
