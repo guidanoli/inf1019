@@ -1,186 +1,188 @@
-
-  Algorithm (in pseudo-code)
-  ---------
-  
-  1   def scheduler
-  2   | all procedures have terminated?
-  3   | | end
-  4   | else
-  5   | | is there a procedure running?
-  6   | | | has it consumed its quantum?
-  7   | | | | has it consumed less that quantum?
-  8   | | | | | raise its priority if possible
-  9   | | | | else
-  10  | | | | | lower its priority if possible
-  11  | | | | stop procedure and put it in the correct queue
-  12  | | | else
-  13  | | | | wait
-  14  | | else
-  15  | | | start next procedure
-  16  end
-  
-  Definitions:
-  
-  - A queue is a list where you can only add nodes in end and remove
-  from the beginning
-  - A node carries only one information: the procedure id (pid)
-  - A procedure is removed from the queue system only when terminated
-  or scheduled. The first, for ever; The last, only on its quantum.
-  - There are 3 queues: F1, F2, F3. One has a higher priority than
-  the other. F1 > F2 > F3. On the other hand, their quantum are
-  inversely proportional to their priority. That is, in terms of
-  time run by a process in F1 is smaller than on F2, and so on.
-  - When initialized, the scheduler puts all procedures in F1.
-  - The scheduler runs fully each queue depending on its priority.
-  F1 can be run until 4 times, F2 2 times, F1 once. This keeps the
-  idea of priority but does not leave procedures with lower
-  priority starving.
-  
-  Pseudo-code explanation:
-  
-  2: We know all procedures have terminated when all queues are empty
-  and no procedures are executing I/O tasks.
-  5: If the procedure pointer is null, no procedure is running
-  6: 7: The scheduler will wait T u.t. (determined by the current
-  procedure's queue) and when done, will stop the current procedure.
-  If the current procedure enters an I/O phase, then the scheduler
-  will be woken up - and thus, knowing it has finished its CPU phase
-  before the quantum.
-  8: 10: If not at highest priority, raise its priority. If not at
-  lowest priority, lower its priority.
-  11: Give it a signal SIGSTOP in order to - well - stop. Remove it
-  from its queue and add it on the correct one (or even the same one,
-  at the end of it).
-  13: Literally do nothing.
-  15: From the current queue, give a signal to the process whose pid
-  is stored in the node removed (TEMPORARLY)
-  
-  Communication:
-  -------------
-  
-  The scheduler will signal its programs with the following signals:
-    SIGSTOP - Tells its son to stop
-    SIGCNT - Tells it to resume executing
-  
-  And the programs will likewise signal the scheduler with:
-    SIGUSR1 - The program has entered I/O
-    SIGCHD - The program has ended
-  
-  SIGSTOP:
-    When a program has entered I/O or has ended its quantum, the
-    scheduler will preemptively stop its process.
-  
-  SIGCNT:
-    When a program has entered its quantum, it has to be awakened from
-    its deep sleep.
-    
-  SIGUSR1 (I/O):
-    When the program enters  I/O by signalling the scheduler with the
-    signal SIGUSR1, it creates a thread that holds the program pid and
-    stops it, waits some time (in this case, 3 seconds), and then puts
-    it on the queue with one level higher of priority.
-  
-  SIGCHD:
-    When the program dies, the scheduler has remove it from its
-    internal structure.
-  
-  Queues:
-  ------
-  
-  Queues are circular (Round-Robin) and have priorities. The higher
-  the priority, less time is reserved for a process (because it is
-  more I/O bound, thus quicker to execute, and won't consume much of
-  the CPU), but more times it will be executed thoroughly. In this
-  project, there will be three queues, one twice the priority of
-  the other - the least important queue will run once and each
-  process can run up to 2^(n-1) u.t., being n = 3, 4 u.t.* .
-  Consequently, the most important queue will run 2^(n-1) times,
-  that is, 4, and each provess can run up to 1 u.t. .
-  
-  In C, there will be an auxiliary queue that will store all the
-  processes that persisted in the same queue, and when the queue
-  empties, they are move the main queue in order. That way it will
-  be possible to determine how many times are necessary for a queue
-  to be emptied.
-  
-  * u.t. = unities of time, quantum
-  
-  Threads:
-  -------
-  
-  There needs to be a thread count. Why? Well, imagine a situation where
-  all processes have entered I/O and next time the scheduler checks if
-  there are any running processes or processes in any queue, it finds none
-  and terminates. This occurrs because in this naive implementation, the
-  scheduler was not aware of the processes on I/O waiting to be inserted
-  again on the queues.
-  
-  This problem can be solved by the use of a thread counter that is
-  increased before the scheduler creates a thread for a proccess that
-  will be entering I/O, and decreased when a given thread is terminated.
-  
-  Obviously, the use of mutexes is undeniably fundamental to keep the
-  counter consistent.
-  
-  That way, the scheduler not only has to check for processes in its queues
-  but also if there is any thread currently handling a process in I/O.
-  
-  Future improvements:
-  -------------------  
-  
-  * Make scheduler sleep when there are I/O bound processes running but
-  none on CPU (queues). Before a I/O process handler thread terminates,
-  check if io_processes count is zero, and, if so, it has to wake up
-  (signal SIGUSR2) the scheduler.
-  
-  SIGCHLD:
-  -------
-  
-  This signal is called whenever a child process is terminated, or
-  interrupted or resumed. That means that there needs to be some filtering
-  and process only those generated when the program is terminated.
-  
-  This is done by creating a program status, which can be:
-  * MANAGING (or normal)
-  * EXECUTING
-  
-  ...when executing, SIGCHLD necessairly means that the child process
-  was terminates. Anywhere else in the main function, the scheduler is
-  managing, and SIGCHLD will be ignored.
-  
-  Alternative Algorithm (in pseudo-code, but more progamatic)
-  ---------------------
-  
-  1   def scheduler
-  2   | while number of processes > 0
-  3   | | queue <- new_queue()
-  4   | | quantum <- queue quantum
-  5   | | while queue isn't empty
-  6   | | | process <- first node from queue
-  7   | | | resume process
-  8   | | | wait until quantum or io signal
-  9   | | | stop process
-  10  | | | switch(cause of stop)
-  11  | | | | io?
-  12  | | | | | create a thread to do:
-  13  | | | | | | wait io blocking time
-  14  | | | | | | move process queue with higher priority            
-  15  | | | | terminated?
-  16  | | | | | remove process from queue
-  17  | | | | | decrease number of processes
-  18  | | | | exceeded quantum?
-  19  | | | | | new queue <- lower_priority(queue)
-  20  | | | | | is new queue == queue?
-  21  | | | | | | move process to auxiliary queue
-  22  | | | | | else
-  23  | | | | | | move process to new queue
-  24  | | | | | end
-  25  | | | | end
-  26  | | | end
-  27  | | end
-  28  | | move all nodes from auxiliary queue to queue
-  29  | end
-  30  end
-  
-  
-  
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                              ┃
+┃  Algorithm (in pseudo-code)                                                  ┃
+┃  ---------                                                                   ┃
+┃                                                                              ┃
+┃  1   def scheduler                                                           ┃
+┃  2   | all procedures have terminated?                                       ┃
+┃  3   | | end                                                                 ┃
+┃  4   | else                                                                  ┃
+┃  5   | | is there a procedure running?                                       ┃
+┃  6   | | | has it consumed its quantum?                                      ┃
+┃  7   | | | | has it consumed less that quantum?                              ┃
+┃  8   | | | | | raise its priority if possible                                ┃
+┃  9   | | | | else                                                            ┃
+┃  10  | | | | | lower its priority if possible                                ┃
+┃  11  | | | | stop procedure and put it in the correct queue                  ┃
+┃  12  | | | else                                                              ┃
+┃  13  | | | | wait                                                            ┃
+┃  14  | | else                                                                ┃
+┃  15  | | | start next procedure                                              ┃
+┃  16  end                                                                     ┃
+┃                                                                              ┃
+┃  Definitions:                                                                ┃
+┃                                                                              ┃
+┃  - A queue is a list where you can only add nodes in end and remove          ┃
+┃  from the beginning                                                          ┃
+┃  - A node carries only one information: the procedure id (pid)               ┃
+┃  - A procedure is removed from the queue system only when terminated         ┃
+┃  or scheduled. The first, for ever; The last, only on its quantum.           ┃
+┃  - There are 3 queues: F1, F2, F3. One has a higher priority than            ┃
+┃  the other. F1 > F2 > F3. On the other hand, their quantum are               ┃
+┃  inversely proportional to their priority. That is, in terms of              ┃
+┃  time run by a process in F1 is smaller than on F2, and so on.               ┃
+┃  - When initialized, the scheduler puts all procedures in F1.                ┃
+┃  - The scheduler runs fully each queue depending on its priority.            ┃
+┃  F1 can be run until 4 times, F2 2 times, F1 once. This keeps the            ┃
+┃  idea of priority but does not leave procedures with lower                   ┃
+┃  priority starving.                                                          ┃
+┃                                                                              ┃
+┃  Pseudo-code explanation:                                                    ┃
+┃                                                                              ┃
+┃  2: We know all procedures have terminated when all queues are empty         ┃
+┃  and no procedures are executing I/O tasks.                                  ┃
+┃  5: If the procedure pointer is null, no procedure is running                ┃
+┃  6: 7: The scheduler will wait T u.t. (determined by the current             ┃
+┃  procedure's queue) and when done, will stop the current procedure.          ┃
+┃  If the current procedure enters an I/O phase, then the scheduler            ┃
+┃  will be woken up - and thus, knowing it has finished its CPU phase          ┃
+┃  before the quantum.                                                         ┃
+┃  8: 10: If not at highest priority, raise its priority. If not at            ┃
+┃  lowest priority, lower its priority.                                        ┃
+┃  11: Give it a signal SIGSTOP in order to - well - stop. Remove it           ┃
+┃  from its queue and add it on the correct one (or even the same one,         ┃
+┃  at the end of it).                                                          ┃
+┃  13: Literally do nothing.                                                   ┃
+┃  15: From the current queue, give a signal to the process whose pid          ┃
+┃  is stored in the node removed (TEMPORARLY)                                  ┃
+┃                                                                              ┃
+┃  Communication:                                                              ┃
+┃  -------------                                                               ┃
+┃                                                                              ┃
+┃  The scheduler will signal its programs with the following signals:          ┃
+┃  SIGSTOP - Tells its son to stop                                             ┃
+┃  SIGCNT - Tells it to resume executing                                       ┃
+┃                                                                              ┃
+┃  And the programs will likewise signal the scheduler with:                   ┃
+┃  SIGUSR1 - The program has entered I/O                                       ┃
+┃  SIGCHD - The program has ended                                              ┃
+┃                                                                              ┃
+┃  SIGSTOP:                                                                    ┃
+┃  When a program has entered I/O or has ended its quantum, the                ┃
+┃  scheduler will preemptively stop its process.                               ┃
+┃                                                                              ┃
+┃  SIGCNT:                                                                     ┃
+┃  When a program has entered its quantum, it has to be awakened from          ┃
+┃  its deep sleep.                                                             ┃
+┃                                                                              ┃
+┃  SIGUSR1 (I/O):                                                              ┃
+┃  When the program enters  I/O by signalling the scheduler with the           ┃
+┃  signal SIGUSR1, it creates a thread that holds the program pid and          ┃
+┃  stops it, waits some time (in this case, 3 seconds), and then puts          ┃
+┃  it on the queue with one level higher of priority.                          ┃
+┃                                                                              ┃
+┃  SIGCHD:                                                                     ┃
+┃  When the program dies, the scheduler has remove it from its                 ┃
+┃  internal structure.                                                         ┃
+┃                                                                              ┃
+┃  Queues:                                                                     ┃
+┃  ------                                                                      ┃
+┃                                                                              ┃
+┃  Queues are circular (Round-Robin) and have priorities. The higher           ┃
+┃  the priority, less time is reserved for a process (because it is            ┃
+┃  more I/O bound, thus quicker to execute, and won't consume much of          ┃
+┃  the CPU), but more times it will be executed thoroughly. In this            ┃
+┃  project, there will be three queues, one twice the priority of              ┃
+┃  the other - the least important queue will run once and each                ┃
+┃  process can run up to 2^(n-1) u.t., being n = 3, 4 u.t.* .                  ┃
+┃  Consequently, the most important queue will run 2^(n-1) times,              ┃
+┃  that is, 4, and each provess can run up to 1 u.t. .                         ┃
+┃                                                                              ┃
+┃  In C, there will be an auxiliary queue that will store all the              ┃
+┃  processes that persisted in the same queue, and when the queue              ┃
+┃  empties, they are move the main queue in order. That way it will            ┃
+┃  be possible to determine how many times are necessary for a queue           ┃
+┃  to be emptied.                                                              ┃
+┃                                                                              ┃
+┃  * u.t. = unities of time, quantum                                           ┃
+┃                                                                              ┃
+┃  Threads:                                                                    ┃
+┃  -------                                                                     ┃
+┃                                                                              ┃
+┃  There needs to be a thread count. Why? Well, imagine a situation where      ┃
+┃  all processes have entered I/O and next time the scheduler checks if        ┃
+┃  there are any running processes or processes in any queue, it finds none    ┃
+┃  and terminates. This occurrs because in this naive implementation, the      ┃
+┃  scheduler was not aware of the processes on I/O waiting to be inserted      ┃
+┃  again on the queues.                                                        ┃
+┃                                                                              ┃
+┃  This problem can be solved by the use of a thread counter that is           ┃
+┃  increased before the scheduler creates a thread for a proccess that         ┃
+┃  will be entering I/O, and decreased when a given thread is terminated.      ┃
+┃                                                                              ┃
+┃  Obviously, the use of mutexes is undeniably fundamental to keep the         ┃
+┃  counter consistent.                                                         ┃
+┃                                                                              ┃
+┃  That way, the scheduler not only has to check for processes in its queues   ┃
+┃  but also if there is any thread currently handling a process in I/O.        ┃
+┃                                                                              ┃
+┃  Future improvements:                                                        ┃
+┃  -------------------                                                         ┃
+┃                                                                              ┃
+┃  * Make scheduler sleep when there are I/O bound processes running but       ┃
+┃  none on CPU (queues). Before a I/O process handler thread terminates,       ┃
+┃  check if io_processes count is zero, and, if so, it has to wake up          ┃
+┃  (signal SIGUSR2) the scheduler.                                             ┃
+┃                                                                              ┃
+┃  SIGCHLD:                                                                    ┃
+┃  -------                                                                     ┃
+┃                                                                              ┃
+┃  This signal is called whenever a child process is terminated, or            ┃
+┃  interrupted or resumed. That means that there needs to be some filtering    ┃
+┃  and process only those generated when the program is terminated.            ┃
+┃                                                                              ┃
+┃  This is done by creating a program status, which can be:                    ┃
+┃  * MANAGING (or normal)                                                      ┃
+┃  * EXECUTING                                                                 ┃
+┃                                                                              ┃
+┃  ...when executing, SIGCHLD necessairly means that the child process         ┃
+┃  was terminates. Anywhere else in the main function, the scheduler is        ┃
+┃  managing, and SIGCHLD will be ignored.                                      ┃
+┃                                                                              ┃
+┃  Alternative Algorithm (in pseudo-code, but more progamatic)                 ┃
+┃  ---------------------                                                       ┃
+┃                                                                              ┃
+┃  1   def scheduler                                                           ┃
+┃  2   | while number of processes > 0                                         ┃
+┃  3   | | queue <- new_queue()                                                ┃
+┃  4   | | quantum <- queue quantum                                            ┃
+┃  5   | | while queue isn't empty                                             ┃
+┃  6   | | | process <- first node from queue                                  ┃
+┃  7   | | | resume process                                                    ┃
+┃  8   | | | wait until quantum or io signal                                   ┃
+┃  9   | | | stop process                                                      ┃
+┃  10  | | | switch(cause of stop)                                             ┃
+┃  11  | | | | io?                                                             ┃
+┃  12  | | | | | create a thread to do:                                        ┃
+┃  13  | | | | | | wait io blocking time                                       ┃
+┃  14  | | | | | | move process queue with higher priority                     ┃
+┃  15  | | | | terminated?                                                     ┃
+┃  16  | | | | | remove process from queue                                     ┃
+┃  17  | | | | | decrease number of processes                                  ┃
+┃  18  | | | | exceeded quantum?                                               ┃
+┃  19  | | | | | new queue <- lower_priority(queue)                            ┃
+┃  20  | | | | | is new queue == queue?                                        ┃
+┃  21  | | | | | | move process to auxiliary queue                             ┃
+┃  22  | | | | | else                                                          ┃
+┃  23  | | | | | | move process to new queue                                   ┃
+┃  24  | | | | | end                                                           ┃
+┃  25  | | | | end                                                             ┃
+┃  26  | | | end                                                               ┃
+┃  27  | | end                                                                 ┃
+┃  28  | | move all nodes from auxiliary queue to queue                        ┃
+┃  29  | end                                                                   ┃
+┃  30  end                                                                     ┃
+┃                                                                              ┃
+┃                                                                              ┃
+┃                                                                              ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
