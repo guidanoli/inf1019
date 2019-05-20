@@ -3,6 +3,7 @@
   #include <unistd.h>
   #include <signal.h>
   #include <sys/types.h>
+  #include <pthread.h>
   #include "queue.h"
   #include "semlib.h"
   
@@ -13,14 +14,23 @@
   int locked = 1;
   qhead signal_queue;
   int semId;
+  pthread_t thread;
   
   void handler(int signo)
   {
     qnode sig;
     enterCR(semId);
+    printf("Entering signo %d in queue...\n",signo);
     qnode_create(&sig,signo);
     qhead_ins(signal_queue,sig);
     exitCR(semId);
+  }
+  
+  void * ThreadFunc( void * info )
+  {
+    sleep(100);
+    printf("Exiting thread...\n");
+    pthread_exit(NULL);
   }
   
   int main(void)
@@ -41,6 +51,7 @@
         exit(1);
       }
       qhead_create(&signal_queue,1);
+      pthread_create(&thread,NULL,ThreadFunc,NULL);
       printf("Entering loop\n");
       while(status==0)
       {

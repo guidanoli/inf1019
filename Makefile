@@ -32,7 +32,7 @@ doer: doer.c
 	$(CC) $(DEBUG) -o doer doer.c $(CFLAGS)
 
 caller: caller.o semlib.o queue.o
-	$(CC) $(DEBUG) -o caller caller.o semlib.o queue.o $(CFLAGS)
+	$(CC) $(DEBUG) -o caller caller.o semlib.o queue.o $(CFLAGS) -lpthread
 
 caller.o: caller.c semlib.h queue.h
 	$(CC) $(DEBUG) -o caller.o caller.c -c $(CFLAGS)
