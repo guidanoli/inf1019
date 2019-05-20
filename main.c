@@ -123,8 +123,9 @@
       if( qhead_empty(queue) == QUEUE_FALSE )
         printf("Escalonador está manipulando a fila #%d.\n",current_queue.id);
       #endif
-      while( qhead_empty(queue) == QUEUE_FALSE )
+      while( 1 )
       {
+        int flag = 0;
         /////////////////////////////////
         // ENTERS CRITICAL REGION
         // Manipulates current process
@@ -132,14 +133,19 @@
         /////////////////////////////////
         enterCR(semId);
         /////////////////////////////////
-        current_proc.node = qhead_rm(queue);
-        current_proc.status = NORMAL;
-        pid = qnode_getid(current_proc.node);
+        if( qhead_empty(queue) == QUEUE_FALSE )
+        {
+          current_proc.node = qhead_rm(queue);
+          current_proc.status = NORMAL;
+          pid = qnode_getid(current_proc.node);
+          flag = 1;
+        }
         /////////////////////////////////
         exitCR(semId);
         /////////////////////////////////
         // EXITS CRITICAL REGION
         /////////////////////////////////        
+        if( !flag ) break;
         
         #ifdef _DEBUG
         printf("Escalonando processo %d...\n",pid);
@@ -149,12 +155,16 @@
         sleep(quantum); // z z z ...
         kill(pid,SIGSTOP);
         
-        /* empty signal queue */
+        /////////////////////////////////
+        // ENTERS CRITICAL REGION
+        // All signals have to be treated
+        /////////////////////////////////
+        enterCR(semId);
+        /////////////////////////////////
         while( qhead_empty(signal_queue) == QUEUE_FALSE )
         {
           qnode sig;
           int signo;
-          enterCR(semId); // enters CR
           sig = qhead_rm(signal_queue);
           signo = qnode_getid(sig);
           qnode_destroy(&sig);
@@ -168,8 +178,12 @@
             exitHandler(pid);
             current_proc.status = TERMINATED;
           }
-          exitCR(semId); // exits CR
-        } /* all signals have been treated */
+        }
+        /////////////////////////////////
+        exitCR(semId);
+        /////////////////////////////////
+        // EXITS CRITICAL REGION
+        /////////////////////////////////
         
         /////////////////////////////////
         // ENTERS CRITICAL REGION
@@ -356,13 +370,13 @@
     procpack * pack;
     qnode io_proc;
     qhead new_queue;
-    int pid;
+    int my_pid;
     pack = (procpack *) info;
     io_proc = pack->process;
-    pid = qnode_getid(io_proc);
+    my_pid = qnode_getid(io_proc);
     new_queue = pack->queue;
-    free(info);
-    printf("Processo %d está em IO.\n",pid);
+    //free(info);
+    printf("Processo %d está em IO.\n",my_pid);
     sleep(IO_BLOCK_TIME); // simulating IO
     /////////////////////////////////
     // ENTERS CRITICAL REGION
@@ -373,7 +387,7 @@
     /////////////////////////////////
     qhead_ins(new_queue,io_proc);
     io_threads--;
-    printf("Processo %d terminou IO.\n",pid);
+    printf("Processo %d terminou IO.\n",my_pid);
     /////////////////////////////////
     exitCR(semId);
     /////////////////////////////////
