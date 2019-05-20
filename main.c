@@ -103,7 +103,6 @@
     setCurrentQueue(FIRST_QUEUE_ID);
     
     #ifdef _DEBUG
-    dump_queues();
     printf("Há %d processos na fila de processos prontos para serem executados.\n",processes_count);
     printf("Iniciando escalonamento...\n");
     #endif
@@ -125,6 +124,8 @@
       if( qhead_empty(queue) == QUEUE_FALSE )
         printf("Escalonador está manipulando a fila #%d.\n",current_queue.id);
       #endif
+      
+      /* current process loop */
       while( 1 )
       {
         int flag = 0;
@@ -137,17 +138,9 @@
         /////////////////////////////////
         if( qhead_empty(queue) == QUEUE_FALSE )
         {
-          #ifdef _DEBUG
-          printf("Antes de remover:\n");
-          dump_queues();
-          #endif
           current_proc.node = qhead_rm(queue);
           current_proc.status = NORMAL;
           pid = qnode_getid(current_proc.node);
-          #ifdef _DEBUG
-          printf("Depois de remover:\n");
-          dump_queues();
-          #endif
           flag = 1;
         }
         /////////////////////////////////
@@ -209,7 +202,7 @@
         {
           int new_queue_id = getLowerPriorityQueueId(current_queue.id);
           #ifdef _DEBUG
-          printf("Processo %d excedeu o quantum de %d u.t. .\n",pid,quantum);
+          printf("Processo %d excedeu o quantum da fila igual a %d u.t. .\n",pid,quantum);
           #endif
           if( new_queue_id == current_queue.id )
           {
@@ -383,16 +376,21 @@
     qnode dead_node;
     dead_node = current_proc.node;
     processes_count--;
-    //qnode_destroy(&dead_node);
+    qnode_destroy(&dead_node);
     kill(pid,SIGKILL);
     printf("Processo %d terminou.\n",pid);
     #ifdef _DEBUG
     dump_queues();
     #endif
     if( processes_count > 0 )
+    {
       printf("Há %d processos restantes\n",processes_count);
+      printf("* %d em fila\n",processes_count-io_threads);
+      printf("* %d em IO\n",io_threads);
+    }
     else
       printf("Não há processos restantes\n");
+    
   }
   
   void * ioThreadFunction(void * info)
@@ -492,29 +490,23 @@
       if((pid = fork()) == 0)
       {
         char * args[QTD_ARGS];
-        #ifdef _DEBUG
         char buffer[QTD_ARGS*(ARG_SIZE+1)+1] = "";
-        #endif
         for( int i = 0 ; i < qt_raj+2 ; i++ )
         {
           args[i] = (char *) malloc(sizeof(char)*ARG_SIZE);
           if( i == 0 ) strcpy(args[0],prog);
           else if( i < qt_raj+1 ) sprintf(args[i],"%d",raj[i-1]);
-          #ifdef _DEBUG
           if( i < qt_raj+1 )
           {
             strcat(buffer,args[i]);
             strcat(buffer," ");
           }
-          #endif
         }
         args[qt_raj+1] = NULL;
-        #ifdef _DEBUG
-        printf("Executando... %s\n",buffer);
-        #endif
+        printf("Processo filho %d executando... %s\n",getpid(),buffer);
         if( execv(*args,args) == -1 )
         {
-          return fatal_error("Could not execute program %d.\n",getpid());
+          return fatal_error("Não foi possível executar programa %d.\n",getpid());
         }
         exit(0);
       }
@@ -532,7 +524,7 @@
         sleep(1);
         processes_count++;
         #ifdef _DEBUG
-        printf("[%d] inserido na fila #%d\n",pid,FIRST_QUEUE_ID);
+        printf("Processo filho %d inserido na fila #%d\n",pid,FIRST_QUEUE_ID);
         #endif
       }
     } /* end parsing */

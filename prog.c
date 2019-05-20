@@ -18,7 +18,7 @@
     int ppid = getppid(), pid = getpid();
     signal(SIGCONT,handler);
     #ifdef _DEBUG
-    printf("Processo filho %d pronto para ser rodado.\n",pid);
+    printf("Processo filho %d pronto para ser executado.\n",pid);
     #endif
     kill(ppid,SIGUSR2); // I am running!
     while( locked );
