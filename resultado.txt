@@ -1,5 +1,7 @@
 
-TESTE 1 : exec prog (1,2,3)
+  ------------------------ RESULTADOS OBTIDOS ------------------------
+  
+  ====== TESTE 1 : exec prog (1,2,3)
 
 Processo filho 15201 executando... prog 1 2 3 
 Processo filho 15201 pronto para ser executado.
@@ -54,4 +56,453 @@ Fila #1: vazia
 Fila #2: vazia
 Não há processos restantes
 Fim do escalonamento. Todos os processos terminados.
+
+  ----------------------------------------------------------------------
+
+  ====== TESTE 2: exec prog (12,1,1,1,1)
+
+Processo filho 16166 executando... prog 12 1 1 1 1 
+Processo filho 16166 pronto para ser executado.
+Processo filho 16166 inserido na fila #0
+Há 1 processos na fila de processos prontos para serem executados.
+Iniciando escalonamento...
+Escalonador está manipulando a fila #0.
+Escalonando processo 16166...
+16166
+Processo 16166 interrompido.
+Processo 16166 excedeu o quantum da fila igual a 1 u.t. .
+Processo 16166 migrará da fila #0 para fila #1
+Escalonador está manipulando a fila #1.
+Escalonando processo 16166...
+16166
+16166
+Processo 16166 interrompido.
+Processo 16166 excedeu o quantum da fila igual a 2 u.t. .
+Processo 16166 migrará da fila #1 para fila #2
+Escalonador está manipulando a fila #2.
+Escalonando processo 16166...
+16166
+16166
+16166
+16166
+Processo 16166 interrompido.
+Processo 16166 excedeu o quantum da fila igual a 4 u.t. .
+Processo 16166 continuará na fila #2.
+Escalonador está manipulando a fila #2.
+Escalonando processo 16166...
+16166
+16166
+16166
+16166
+Processo 16166 interrompido.
+Processo 16166 excedeu o quantum da fila igual a 4 u.t. .
+Processo 16166 continuará na fila #2.
+Escalonador está manipulando a fila #2.
+Escalonando processo 16166...
+16166
+Processo filho 16166 manda um sinal para pai para entrar em IO...
+Processo 16166 interrompido.
+Processo 16166 está em IO.
+Processo 16166 terminou IO.
+Escalonador está manipulando a fila #1.
+Escalonando processo 16166...
+16166
+Processo filho 16166 manda um sinal para pai para entrar em IO...
+Processo 16166 interrompido.
+Processo 16166 está em IO.
+Processo 16166 terminou IO.
+Escalonando processo 16166...
+16166
+Processo 16166 interrompido.
+Processo 16166 excedeu o quantum da fila igual a 1 u.t. .
+Processo 16166 migrará da fila #0 para fila #1
+Escalonador está manipulando a fila #1.
+Escalonando processo 16166...
+Processo filho 16166 manda um sinal para pai para entrar em IO...
+Processo 16166 interrompido.
+Processo 16166 está em IO.
+Processo 16166 terminou IO.
+Escalonando processo 16166...
+16166
+Processo 16166 interrompido.
+Processo 16166 excedeu o quantum da fila igual a 1 u.t. .
+Processo 16166 migrará da fila #0 para fila #1
+Escalonador está manipulando a fila #1.
+Escalonando processo 16166...
+Processo filho 16166 manda um sinal para pai para entrar em IO...
+Processo 16166 interrompido.
+Processo 16166 está em IO.
+Processo 16166 terminou IO.
+Escalonador está manipulando a fila #0.
+Escalonando processo 16166...
+16166
+Processo 16166 interrompido.
+Processo 16166 excedeu o quantum da fila igual a 1 u.t. .
+Processo 16166 migrará da fila #0 para fila #1
+Escalonador está manipulando a fila #1.
+Escalonando processo 16166...
+Processo filho 16166 manda um sinal para pai para terminar...
+Processo 16166 interrompido.
+Processo 16166 terminou.
+Fila #0: vazia
+Fila #1: vazia
+Fila #2: vazia
+Não há processos restantes
+Fim do escalonamento. Todos os processos terminados.
+  
+  --------------------------------------------------------------------
+  
+  ====== TESTE 3: exec prog (0,0,0,0)
+  
+Processo filho 18656 executando... prog 0 0 0 0 
+Processo filho 18656 pronto para ser executado.
+Processo filho 18656 inserido na fila #0
+Há 1 processos na fila de processos prontos para serem executados.
+Iniciando escalonamento...
+Escalonador está manipulando a fila #0.
+Escalonando processo 18656...
+Processo filho 18656 manda um sinal para pai para entrar em IO...
+Processo 18656 interrompido.
+Processo 18656 está em IO.
+Processo 18656 terminou IO.
+Escalonador está manipulando a fila #0.
+Escalonando processo 18656...
+Processo filho 18656 manda um sinal para pai para entrar em IO...
+Processo 18656 interrompido.
+Processo 18656 está em IO.
+Processo 18656 terminou IO.
+Escalonador está manipulando a fila #0.
+Escalonando processo 18656...
+Processo filho 18656 manda um sinal para pai para entrar em IO...
+Processo 18656 interrompido.
+Processo 18656 está em IO.
+Processo 18656 terminou IO.
+Escalonando processo 18656...
+Processo filho 18656 manda um sinal para pai para terminar...
+Processo 18656 interrompido.
+Processo 18656 terminou.
+Fila #0: vazia
+Fila #1: vazia
+Fila #2: vazia
+Não há processos restantes
+Fim do escalonamento. Todos os processos terminados.
+
+  --------------------------------------------------------------------
+  
+  ====== TESTE 4: exec prog (3,1,1)
+  
+  [!] com #define SMALLEST_QUANTUM 2 no código de main.c
+      altera u.t. de 1s para 2s.
+  
+Processo filho 16579 executando... prog 3 1 1 
+Processo filho 16579 pronto para ser executado.
+Processo filho 16579 inserido na fila #0
+Há 1 processos na fila de processos prontos para serem executados.
+Iniciando escalonamento...
+Escalonador está manipulando a fila #0.
+Escalonando processo 16579...
+16579
+16579
+Processo 16579 interrompido.
+Processo 16579 excedeu o quantum da fila igual a 2 u.t. .
+Processo 16579 migrará da fila #0 para fila #1
+Escalonador está manipulando a fila #1.
+Escalonando processo 16579...
+16579
+Processo filho 16579 manda um sinal para pai para entrar em IO...
+Processo 16579 interrompido.
+Processo 16579 está em IO.
+Processo 16579 terminou IO.
+Escalonador está manipulando a fila #0.
+Escalonando processo 16579...
+16579
+Processo filho 16579 manda um sinal para pai para entrar em IO...
+Processo 16579 interrompido.
+Processo 16579 está em IO.
+Processo 16579 terminou IO.
+Escalonador está manipulando a fila #0.
+Escalonando processo 16579...
+16579
+Processo filho 16579 manda um sinal para pai para terminar...
+Processo 16579 interrompido.
+Processo 16579 terminou.
+Fila #0: vazia
+Fila #1: vazia
+Fila #2: vazia
+Não há processos restantes
+Fim do escalonamento. Todos os processos terminados.
+  
+  ---------
+  
+  ====== TESTE 5: exec prog (1,1,1)
+                  exec prog (2,2,2)
+                  exec prog (3,3,3)
+  
+Processo filho 16786 executando... prog 1 1 1 
+Processo filho 16786 pronto para ser executado.
+Processo filho 16786 inserido na fila #0
+Processo filho 16787 executando... prog 2 2 2 
+Processo filho 16787 pronto para ser executado.
+Processo filho 16787 inserido na fila #0
+Processo filho 16788 executando... prog 3 3 3 
+Processo filho 16788 pronto para ser executado.
+Processo filho 16788 inserido na fila #0
+Há 3 processos na fila de processos prontos para serem executados.
+Iniciando escalonamento...
+Escalonador está manipulando a fila #0.
+Escalonando processo 16786...
+16786
+Processo 16786 interrompido.
+Processo 16786 excedeu o quantum da fila igual a 1 u.t. .
+Processo 16786 migrará da fila #0 para fila #1
+Escalonando processo 16787...
+16787
+Processo 16787 interrompido.
+Processo 16787 excedeu o quantum da fila igual a 1 u.t. .
+Processo 16787 migrará da fila #0 para fila #1
+Escalonando processo 16788...
+16788
+Processo 16788 interrompido.
+Processo 16788 excedeu o quantum da fila igual a 1 u.t. .
+Processo 16788 migrará da fila #0 para fila #1
+Escalonador está manipulando a fila #1.
+Escalonando processo 16786...
+Processo filho 16786 manda um sinal para pai para entrar em IO...
+Processo 16786 interrompido.
+Escalonando processo 16787...
+Processo 16786 está em IO.
+16787
+Processo filho 16787 manda um sinal para pai para entrar em IO...
+Processo 16787 interrompido.
+Escalonando processo 16788...
+Processo 16787 está em IO.
+16788
+16788
+Processo 16786 terminou IO.
+Processo 16788 interrompido.
+Processo 16788 excedeu o quantum da fila igual a 2 u.t. .
+Processo 16788 migrará da fila #1 para fila #2
+Escalonador está manipulando a fila #2.
+Escalonando processo 16788...
+Processo filho 16788 manda um sinal para pai para entrar em IO...
+Processo 16788 interrompido.
+Processo 16788 está em IO.
+Escalonador está manipulando a fila #0.
+Escalonando processo 16786...
+16786
+Processo 16787 terminou IO.
+Processo 16786 interrompido.
+Processo 16786 excedeu o quantum da fila igual a 1 u.t. .
+Processo 16786 migrará da fila #0 para fila #1
+Escalonando processo 16787...
+16787
+Processo 16787 interrompido.
+Processo 16787 excedeu o quantum da fila igual a 1 u.t. .
+Processo 16787 migrará da fila #0 para fila #1
+Escalonador está manipulando a fila #1.
+Escalonando processo 16786...
+Processo filho 16786 manda um sinal para pai para entrar em IO...
+Processo 16786 interrompido.
+Escalonando processo 16787...
+Processo 16786 está em IO.
+16787
+Processo 16788 terminou IO.
+Processo filho 16787 manda um sinal para pai para entrar em IO...
+Processo 16787 interrompido.
+Escalonando processo 16788...
+Processo 16787 está em IO.
+16788
+16788
+Processo 16786 terminou IO.
+Processo 16788 interrompido.
+Processo 16788 excedeu o quantum da fila igual a 2 u.t. .
+Processo 16788 migrará da fila #1 para fila #2
+Escalonador está manipulando a fila #2.
+Escalonando processo 16788...
+16788
+Processo 16787 terminou IO.
+Processo filho 16788 manda um sinal para pai para entrar em IO...
+Processo 16788 interrompido.
+Processo 16788 está em IO.
+Escalonador está manipulando a fila #0.
+Escalonando processo 16786...
+16786
+Processo 16786 interrompido.
+Processo 16786 excedeu o quantum da fila igual a 1 u.t. .
+Processo 16786 migrará da fila #0 para fila #1
+Escalonando processo 16787...
+16787
+Processo 16787 interrompido.
+Processo 16787 excedeu o quantum da fila igual a 1 u.t. .
+Processo 16787 migrará da fila #0 para fila #1
+Escalonador está manipulando a fila #1.
+Escalonando processo 16786...
+Processo filho 16786 manda um sinal para pai para terminar...
+Processo 16786 interrompido.
+Processo 16786 terminou.
+Fila #0: vazia
+Fila #1: não vazia
+- 16787
+Fila #2: vazia
+Há 2 processos restantes
+* 1 em fila
+* 1 em IO
+Escalonando processo 16787...
+16787
+Processo 16788 terminou IO.
+Processo filho 16787 manda um sinal para pai para terminar...
+Processo 16787 interrompido.
+Processo 16787 terminou.
+Fila #0: vazia
+Fila #1: não vazia
+- 16788
+Fila #2: vazia
+Há 1 processos restantes
+* 1 em fila
+* 0 em IO
+Escalonando processo 16788...
+16788
+16788
+Processo 16788 interrompido.
+Processo 16788 excedeu o quantum da fila igual a 2 u.t. .
+Processo 16788 migrará da fila #1 para fila #2
+Escalonador está manipulando a fila #2.
+Escalonando processo 16788...
+16788
+Processo filho 16788 manda um sinal para pai para terminar...
+Processo 16788 interrompido.
+Processo 16788 terminou.
+Fila #0: vazia
+Fila #1: vazia
+Fila #2: vazia
+Não há processos restantes
+Fim do escalonamento. Todos os processos terminados.
+  
+----------------------------------------------------------------------
+  
+  ====== TESTE 6: exec prog (1,1,1)
+                  exec prog (1,1,1)
+                  exec prog (1,1,1)
+  
+  Processo filho 16904 executando... prog 1 1 1 
+  Processo filho 16904 pronto para ser executado.
+  Processo filho 16904 inserido na fila #0
+  Processo filho 16905 executando... prog 1 1 1 
+  Processo filho 16905 pronto para ser executado.
+  Processo filho 16905 inserido na fila #0
+  Processo filho 16906 executando... prog 1 1 1 
+  Processo filho 16906 pronto para ser executado.
+  Processo filho 16906 inserido na fila #0
+  Há 3 processos na fila de processos prontos para serem executados.
+  Iniciando escalonamento...
+  Escalonador está manipulando a fila #0.
+  Escalonando processo 16904...
+  16904
+  Processo filho 16904 manda um sinal para pai para entrar em IO...
+  Processo 16904 interrompido.
+  Escalonando processo 16905...
+  Processo 16904 está em IO.
+  16905
+  Processo 16905 interrompido.
+  Processo 16905 excedeu o quantum da fila igual a 1 u.t. .
+  Processo 16905 migrará da fila #0 para fila #1
+  Escalonando processo 16906...
+  16906
+  Processo 16906 interrompido.
+  Processo 16906 excedeu o quantum da fila igual a 1 u.t. .
+  Processo 16906 migrará da fila #0 para fila #1
+  Escalonador está manipulando a fila #1.
+  Escalonando processo 16905...
+  Processo filho 16905 manda um sinal para pai para entrar em IO...
+  Processo 16905 interrompido.
+  Escalonando processo 16906...
+  Processo 16905 está em IO.
+  Processo filho 16906 manda um sinal para pai para entrar em IO...
+  Processo 16906 interrompido.
+  Processo 16906 está em IO.
+  Processo 16904 terminou IO.
+  Escalonador está manipulando a fila #0.
+  Escalonando processo 16904...
+  Processo 16904 interrompido.
+  Processo 16904 excedeu o quantum da fila igual a 1 u.t. .
+  Processo 16904 migrará da fila #0 para fila #1
+  Escalonador está manipulando a fila #1.
+  Escalonando processo 16904...
+  16904
+  Processo filho 16904 manda um sinal para pai para entrar em IO...
+  Processo 16904 interrompido.
+  Processo 16904 está em IO.
+  Processo 16905 terminou IO.
+  Escalonador está manipulando a fila #0.
+  Escalonando processo 16905...
+  16905
+  Processo 16906 terminou IO.
+  Processo 16905 interrompido.
+  Processo 16905 excedeu o quantum da fila igual a 1 u.t. .
+  Processo 16905 migrará da fila #0 para fila #1
+  Escalonando processo 16906...
+  16906
+  Processo 16906 interrompido.
+  Processo 16906 excedeu o quantum da fila igual a 1 u.t. .
+  Processo 16906 migrará da fila #0 para fila #1
+  Escalonador está manipulando a fila #1.
+  Escalonando processo 16905...
+  Processo filho 16905 manda um sinal para pai para entrar em IO...
+  Processo 16905 interrompido.
+  Escalonando processo 16906...
+  Processo 16905 está em IO.
+  Processo filho 16906 manda um sinal para pai para entrar em IO...
+  Processo 16906 interrompido.
+  Processo 16906 está em IO.
+  Processo 16904 terminou IO.
+  Escalonador está manipulando a fila #0.
+  Escalonando processo 16904...
+  16904
+  Processo 16904 interrompido.
+  Processo 16904 excedeu o quantum da fila igual a 1 u.t. .
+  Processo 16904 migrará da fila #0 para fila #1
+  Escalonador está manipulando a fila #1.
+  Escalonando processo 16904...
+  Processo filho 16904 manda um sinal para pai para terminar...
+  Processo 16904 interrompido.
+  Processo 16904 terminou.
+  Fila #0: vazia
+  Fila #1: vazia
+  Fila #2: vazia
+  Há 2 processos restantes
+  * 0 em fila
+  * 2 em IO
+  Processo 16905 terminou IO.
+  Escalonando processo 16905...
+  16905
+  Processo 16906 terminou IO.
+  Processo 16905 interrompido.
+  Processo 16905 excedeu o quantum da fila igual a 1 u.t. .
+  Processo 16905 migrará da fila #0 para fila #1
+  Escalonando processo 16906...
+  16906
+  Processo 16906 interrompido.
+  Processo 16906 excedeu o quantum da fila igual a 1 u.t. .
+  Processo 16906 migrará da fila #0 para fila #1
+  Escalonador está manipulando a fila #1.
+  Escalonando processo 16905...
+  Processo filho 16905 manda um sinal para pai para terminar...
+  Processo 16905 interrompido.
+  Processo 16905 terminou.
+  Fila #0: vazia
+  Fila #1: não vazia
+  - 16906
+  Fila #2: vazia
+  Há 1 processos restantes
+  * 1 em fila
+  * 0 em IO
+  Escalonando processo 16906...
+  Processo filho 16906 manda um sinal para pai para terminar...
+  Processo 16906 interrompido.
+  Processo 16906 terminou.
+  Fila #0: vazia
+  Fila #1: vazia
+  Fila #2: vazia
+  Não há processos restantes
+  Fim do escalonamento. Todos os processos terminados.
 

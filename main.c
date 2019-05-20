@@ -118,12 +118,15 @@
       // content of process_count and does
       // not modify it.
       
-      queue = getUpdatedQueue();
-      quantum = getQueueQuantum(current_queue.id);
-      #ifdef _DEBUG
-      if( qhead_empty(queue) == QUEUE_FALSE )
-        printf("Escalonador está manipulando a fila #%d.\n",current_queue.id);
-      #endif
+      if( processes_count != io_threads )
+      {
+        queue = getUpdatedQueue();
+        quantum = getQueueQuantum(current_queue.id);
+        #ifdef _DEBUG
+        if( qhead_empty(queue) == QUEUE_FALSE )
+          printf("Escalonador está manipulando a fila #%d.\n",current_queue.id);
+        #endif
+      }
       
       /* current process loop */
       while( 1 )
@@ -296,6 +299,10 @@
   {
     if( current_queue.runs_left == 0 )
     {
+      #ifdef _DEBUG
+      if( processes_count != io_threads && qhead_empty(current_queue.queue) == QUEUE_FALSE )
+        printf("Fila #%d chegou à sua cota de %d corridas.\n",current_queue.id,getQueueRuns(current_queue.id));
+      #endif
       forceNextQueue();
     }
     current_queue.runs_left--; // already wastes by calling

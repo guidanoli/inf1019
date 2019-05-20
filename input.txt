@@ -1,1 +1,3 @@
-exec prog (1,2,3)
+exec prog (1,1,1)
+exec prog (2,2,2)
+exec prog (3,3,3)
