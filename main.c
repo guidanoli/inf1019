@@ -74,6 +74,7 @@
   void signalHandler(int signo);
   void * ioThreadFunction(void * info);
   procpack * getCurrentProcessPackage();
+  void dump_queues();
 
   int main(int argc, char ** argv)
   {
@@ -102,6 +103,7 @@
     setCurrentQueue(FIRST_QUEUE_ID);
     
     #ifdef _DEBUG
+    dump_queues();
     printf("Há %d processos na fila de processos prontos para serem executados.\n",processes_count);
     printf("Iniciando escalonamento...\n");
     #endif
@@ -135,9 +137,17 @@
         /////////////////////////////////
         if( qhead_empty(queue) == QUEUE_FALSE )
         {
+          #ifdef _DEBUG
+          printf("Antes de remover:\n");
+          dump_queues();
+          #endif
           current_proc.node = qhead_rm(queue);
           current_proc.status = NORMAL;
           pid = qnode_getid(current_proc.node);
+          #ifdef _DEBUG
+          printf("Depois de remover:\n");
+          dump_queues();
+          #endif
           flag = 1;
         }
         /////////////////////////////////
@@ -154,6 +164,10 @@
         kill(pid,SIGCONT);
         sleep(quantum); // z z z ...
         kill(pid,SIGSTOP);
+        
+        #ifdef _DEBUG
+        printf("Processo %d interrompido.\n",pid);
+        #endif
         
         /////////////////////////////////
         // ENTERS CRITICAL REGION
@@ -218,8 +232,19 @@
         // EXITS CRITICAL REGION
         /////////////////////////////////
       }
+      /////////////////////////////////
+      // ENTERS CRITICAL REGION
+      // Manipulates auxiliary queue
+      /////////////////////////////////
+      enterCR(semId);
+      /////////////////////////////////
       if( qhead_transfer(aux_queue,queue,QFLAG_TRANSFER_ALL) != QUEUE_OK )
         return fatal_error("Erro ao administrar filas auxiliares\n");
+      /////////////////////////////////
+      exitCR(semId);
+      /////////////////////////////////
+      // EXITS CRITICAL REGION
+      /////////////////////////////////
     }
     
     #ifdef _DEBUG
@@ -358,11 +383,16 @@
     qnode dead_node;
     dead_node = current_proc.node;
     processes_count--;
-    qnode_destroy(&dead_node);
+    //qnode_destroy(&dead_node);
     kill(pid,SIGKILL);
     printf("Processo %d terminou.\n",pid);
+    #ifdef _DEBUG
+    dump_queues();
+    #endif
     if( processes_count > 0 )
       printf("Há %d processos restantes\n",processes_count);
+    else
+      printf("Não há processos restantes\n");
   }
   
   void * ioThreadFunction(void * info)
@@ -409,7 +439,27 @@
   }
    
   void dummy_handler(int signo) {}
-   
+  
+  // needs to be inside a semaphore!!
+  void dump_queues()
+  {
+    for(int i = 0 ; i < N_OF_QUEUES ; i++ )
+    {
+      qhead f = proc_queues[i];
+      qhead aux;
+      printf("Fila #%d: %s\n",i,(qhead_empty(f)==QUEUE_OK)?"vazia":"não vazia");
+      qhead_create(&aux,-1);
+      while( qhead_empty(f) == QUEUE_FALSE )
+      {
+        qnode n = qhead_rm(f);
+        qhead_ins(aux,n);
+        printf("- %d\n",qnode_getid(n));
+      }
+      qhead_transfer(aux,f,QFLAG_TRANSFER_ALL);
+      qhead_destroy(&aux);
+    }
+  }
+  
   int init_interpreter()
   {
     char c;
