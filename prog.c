@@ -18,13 +18,10 @@
     int ppid = getppid(), pid = getpid();
     signal(SIGCONT,handler);
     #ifdef _DEBUG
-    printf("Processo filho %d chama SIGUSR2 ao pai...\n",pid);
+    printf("Processo filho %d pronto para ser rodado.\n",pid);
     #endif
     kill(ppid,SIGUSR2); // I am running!
     while( locked );
-    #ifdef _DEBUG
-    printf("Processo filho %d rodando!\n",pid);
-    #endif
     signal(SIGCONT,SIG_DFL);
     
 	  for( int i = 1 ; i < argc ; i++ )
@@ -37,14 +34,14 @@
 	    if( i < argc - 1 )
 	    {
 	      #ifdef _DEBUG
-        printf("Processo filho %d quer entrar em IO...\n",pid);
+        printf("Processo filho %d manda um sinal para pai para entrar em IO...\n",pid);
 	      #endif
 	      kill(ppid,SIGUSR1); // I am entering IO!
 	      sleep(1);           // make sure not to continue
       }
 	  }
     #ifdef _DEBUG
-    printf("Processo filho %d quer terminar...\n",pid);
+    printf("Processo filho %d manda um sinal para pai para terminar...\n",pid);
     #endif
 	  kill(ppid,SIGUSR2); // I want to exit!
 	  sleep(1);
