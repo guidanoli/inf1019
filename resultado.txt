@@ -1,0 +1,57 @@
+
+TESTE 1 : exec prog (1,2,3)
+
+Processo filho 15201 executando... prog 1 2 3 
+Processo filho 15201 pronto para ser executado.
+Processo filho 15201 inserido na fila #0
+Há 1 processos na fila de processos prontos para serem executados.
+Iniciando escalonamento...
+Escalonador está manipulando a fila #0.
+Escalonando processo 15201...
+15201
+Processo 15201 interrompido.
+Processo 15201 excedeu o quantum da fila igual a 1 u.t. .
+Processo 15201 migrará da fila #0 para fila #1
+Escalonador está manipulando a fila #1.
+Escalonando processo 15201...
+Processo filho 15201 manda um sinal para pai para entrar em IO...
+Processo 15201 interrompido.
+Processo 15201 está em IO.
+Processo 15201 terminou IO.
+Escalonador está manipulando a fila #0.
+Escalonando processo 15201...
+15201
+Processo 15201 interrompido.
+Processo 15201 excedeu o quantum da fila igual a 1 u.t. .
+Processo 15201 migrará da fila #0 para fila #1
+Escalonador está manipulando a fila #1.
+Escalonando processo 15201...
+15201
+Processo filho 15201 manda um sinal para pai para entrar em IO...
+Processo 15201 interrompido.
+Processo 15201 está em IO.
+Processo 15201 terminou IO.
+Escalonador está manipulando a fila #0.
+Escalonando processo 15201...
+15201
+Processo 15201 interrompido.
+Processo 15201 excedeu o quantum da fila igual a 1 u.t. .
+Processo 15201 migrará da fila #0 para fila #1
+Escalonador está manipulando a fila #1.
+Escalonando processo 15201...
+15201
+15201
+Processo 15201 interrompido.
+Processo 15201 excedeu o quantum da fila igual a 2 u.t. .
+Processo 15201 migrará da fila #1 para fila #2
+Escalonador está manipulando a fila #2.
+Escalonando processo 15201...
+Processo filho 15201 manda um sinal para pai para terminar...
+Processo 15201 interrompido.
+Processo 15201 terminou.
+Fila #0: vazia
+Fila #1: vazia
+Fila #2: vazia
+Não há processos restantes
+Fim do escalonamento. Todos os processos terminados.
+

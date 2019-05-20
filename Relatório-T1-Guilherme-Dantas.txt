@@ -1,0 +1,42 @@
+                                                                        ┃
+  INF1019 - 2019.1 - L. F. Seibel                     Guilherme Dantas  ┃
+  Trabalho 1                                                   1713155  ┃
+                                                                        ┃
+            Escalonamento em Múltiplos Níveis com Feedback              ┃
+            ⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺⎺              ┃
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┫
+                                                                        ┃
+  Contém nesta pasta os seguintes arquivos:                             ┃
+                                                                        ┃
+  algorithm.txt     Estudo do algoritmo do escalonador (EN)             ┃
+  main.c            Módulo interpretador e escalonador                  ┃
+  Makefile          Arquivo make que gera os constructos                ┃
+  prog.c            Módulo para programa-usuário                        ┃
+  queue.c           Módulo de implementação de fila (EN)                ┃
+  queue.h           Módulo de interface de fila (EN)                    ┃
+  resultados.txt    Saída do programa para cada caso de teste           ┃
+  semlib.c          Módulo de implementação de semáforos                ┃
+  semlib.h          Módulo de interface de semáforos                    ┃
+  test_queue.c      Módulo de testes do módulo fila (EN)                ┃
+                                                                        ┃
+  (EN) ... English                                                      ┃
+                                                                        ┃
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+  
+  O teste do módulo main.c foi realizado com o programa prog (cujo
+  código-fonte é prog.c , passando como entrada ou um arquivo com um
+  commando por linha ou manualmente digitando os comandos na shell e
+  dando enter ao fim de cada comando. Os comandos, como constam no
+  enunciado, são do tipo "exec prog (%d(,%d)*)".
+  
+  Segue a análise dos resultados obtidos e esperados de cada teste.
+  A saída completa emitida pelo programa em modo debug está no arquivo
+  de nome "resultados.txt", para manter este documento enxuto.
+  
+  [1] exec prog (1,2,3)
+      
+      Pode-se ver que ocorreram 6 rajadas, intercaladas de 2 interrup-
+      ções de IO - que condiz com o comando. Além disso, o número de
+      rajadas emitidas pelo programa usuário nunca ultrapassou o quantum
+      da fila em que estava.
+      
