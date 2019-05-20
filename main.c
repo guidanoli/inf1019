@@ -27,6 +27,7 @@
   } proc_status;
   
   typedef enum {
+    PARSING,
     MANAGING,
     EXECUTING,
   } schdlr_status;
@@ -52,7 +53,7 @@
   qhead aux_queue = NULL;
   process current_proc;
   procqueue current_queue;
-  schdlr_status my_status = MANAGING;
+  schdlr_status my_status = PARSING;
   int processes_count = 0;
   int io_threads = 0;
   int signal_lock = 0;
@@ -96,6 +97,9 @@
     
     /* parse args from stdin and build queues */
     if((ret=init_interpreter())!=0) return ret;
+    
+    /* change state */
+    my_status = MANAGING;
     
     /* initialize signal handlers for scheduler */
     signal(SIGUSR1,signalHandler);
@@ -143,6 +147,7 @@
         kill(pid,SIGCONT);
         while(signal_lock);
         my_status = EXECUTING;
+        signal_lock = 2; // allows termination
         sleep(quantum); // z z z ...
         
         /////////////////////////////////
@@ -152,7 +157,7 @@
         /////////////////////////////////
         enterCR(semId);
         /////////////////////////////////
-        my_status = NORMAL;
+        my_status = MANAGING;
         kill(pid,SIGSTOP);
         /////////////////////////////////
         exitCR(semId);
@@ -160,11 +165,7 @@
         // EXITS CRITICAL REGION
         /////////////////////////////////
         
-        // sleep(1); -- see if it is necessary
-        // will signalHandler be called soon
-        // enough so that the current process
-        // status will be changed before
-        // checking it in the following CR?
+        while(signal_lock);
         
         /////////////////////////////////
         // ENTERS CRITICAL REGION
@@ -302,9 +303,6 @@
       int pid;
       void * info;
       pthread_t thread;
-      #ifdef _DEBUG
-      printf("SIGUSR Called!");
-      #endif
       /////////////////////////////////
       // ENTERS CRITICAL REGION
       // Manipulates current process
@@ -338,7 +336,7 @@
     }
     else if( signo == SIGCHLD )
     {
-      if( my_status == EXECUTING )
+      if( my_status == EXECUTING || signal_lock == 2 )
       {
         qnode dead_node;
         printf("Goodbye cruel world...\n");

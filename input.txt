@@ -1,1 +1,1 @@
-exec prog (10)
+exec prog (3,3,1,1,1)
