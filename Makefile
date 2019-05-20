@@ -26,6 +26,14 @@ queue.o: queue.c queue.h
 semlib.o: semlib.c semlib.h
 	$(CC) $(DEBUG) -o semlib.o semlib.c -c $(CFLAGS)
 
+zombies: doer caller
+
+doer: doer.c
+	$(CC) $(DEBUG) -o doer doer.c $(CFLAGS)
+
+caller: caller.c
+	$(CC) $(DEBUG) -o caller caller.c $(CFLAGS)
+
 clean:
 	# Deletes binaries and objects
 	find . -type f -executable -exec sh -c "file -i '{}' | grep -q 'x-executable; charset=binary'" \; -print | xargs rm -f

@@ -35,19 +35,12 @@
 	    }
 	    if( i < argc - 1 )
 	    {
-	      locked = 1;
-        signal(SIGCONT,handler);
 	      kill(ppid,SIGUSR1); // I am entering IO!
-        printf("%d entrou em IO!\n",pid);
-	      while( locked );
-	      signal(SIGCONT,SIG_DFL);
+	      sleep(1);           // make sure not to continue
       }
 	  }
-	  locked = 1;
-	  signal(SIGUSR1,handler);
 	  kill(ppid,SIGUSR2); // I want to exit!
-	  printf("%d requisita término!\n",pid);
-	  while(locked);
+	  sleep(1);
 	  return 0;
   }
   

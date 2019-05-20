@@ -117,16 +117,17 @@
     while( 1 )
     {
       if( processes_count <= 0 ) break;
+      
       // there is no need for mutex here
       // since the processes_count only
       // decreases and it only reads the
       // content of process_count and does
       // not modify it.
+      
       queue = getUpdatedQueue();
       quantum = getQueueQuantum(current_queue.id);
       while( qhead_empty(queue) == QUEUE_FALSE )
       {
-        //empty queue -> aux
         /////////////////////////////////
         // ENTERS CRITICAL REGION
         // Manipulates current process
@@ -334,12 +335,14 @@
       signal_lock = 0;
       #endif
     }
-    else if( signo == SIGCHLD )
+    else if( signo == SIGUSR2 )
     {
-      if( my_status == EXECUTING || signal_lock == 2 )
+      if( my_status != PARSING )
       {
         qnode dead_node;
+        #ifdef _DEBUG
         printf("Goodbye cruel world...\n");
+        #endif
         /////////////////////////////////
         // ENTERS CRITICAL REGION
         // Manipulates  the process status
@@ -357,14 +360,8 @@
         /////////////////////////////////
         // EXITS CRITICAL REGION
         /////////////////////////////////
+        signal_lock = 0;
       }
-      signal_lock = 0;
-    }
-    else if( signo == SIGUSR2 )
-    {
-      #ifdef _DEBUG
-      printf("Processo pai chama SIGSTOP ao filho\n");
-      #endif
     }
   }
   
