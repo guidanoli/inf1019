@@ -133,6 +133,7 @@
     if( node == NULL ) return NULL;
     if( node == head->end ) head->end = NULL;
     head->ini = node->next;
+    node->next = NULL;
     return node;
   }
 
