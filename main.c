@@ -56,10 +56,10 @@
   schdlr_status my_status = PARSING;
   int processes_count = 0;
   int io_threads = 0;
-  int signal_lock = 0;
   
-  // semaphore
+  // semaphore and queues
   int semId = 0;
+  qhead signal_queue;
   
   // functions
   int fatal_error(const char * err_msg_format, ...);
@@ -75,8 +75,10 @@
   qhead getUpdatedQueue();
   void setCurrentQueue(int id);
   void forceNextQueue();
+  void dummy_handler(int signo);
+  void ioHandler(int pid);
   void signalHandler(int signo);
-  void * ioProcessHandler(void * info);
+  void * ioThreadFunction(void * info);
   procpack * getCurrentProcessPackage();
 
   int main(int argc, char ** argv)
@@ -91,21 +93,20 @@
     /* initialize semaphore */
     if((semId = semCreate(SEM_KEY))==-1) return EXIT_FAILURE;
     if(semInit(semId)==-1) return EXIT_FAILURE;
-    
-    /* initialize signal handlers for interpreter */
-    signal(SIGUSR2,signalHandler);
+   
+    /* initialize interpreter signal handler */
+    signal(SIGUSR2,dummy_handler);
     
     /* parse args from stdin and build queues */
     if((ret=init_interpreter())!=0) return ret;
     
+    /* initialize scheduler signal handlers */
+    signal(SIGUSR1,signalHandler);
+    signal(SIGUSR2,signalHandler);
+    
     /* change state */
     my_status = MANAGING;
-    
-    /* initialize signal handlers for scheduler */
-    signal(SIGUSR1,signalHandler);
-    signal(SIGCHLD,signalHandler);
-    signal(SIGUSR2,SIG_DFL);
-    
+        
     /* start from queue of highest priority */
     setCurrentQueue(0);
     
@@ -144,29 +145,31 @@
         // EXITS CRITICAL REGION
         /////////////////////////////////        
         
-        signal_lock = 1;
         kill(pid,SIGCONT);
-        while(signal_lock);
-        my_status = EXECUTING;
-        signal_lock = 2; // allows termination
         sleep(quantum); // z z z ...
-        
-        /////////////////////////////////
-        // ENTERS CRITICAL REGION
-        // Manipulates current process
-        // and current queue
-        /////////////////////////////////
-        enterCR(semId);
-        /////////////////////////////////
-        my_status = MANAGING;
         kill(pid,SIGSTOP);
-        /////////////////////////////////
-        exitCR(semId);
-        /////////////////////////////////
-        // EXITS CRITICAL REGION
-        /////////////////////////////////
         
-        while(signal_lock);
+        /* empty signal queue */
+        while( qhead_empty(signal_queue) == QUEUE_FALSE )
+        {
+          qnode sig;
+          int signo;
+          enterCR(semId); // enters CR
+          sig = qhead_rm(signal_queue);
+          signo = qnode_getid(sig);
+          qnode_destroy(&sig);
+          if( signo == SIGUSR1 )
+          {
+            ioHandler(pid);
+            current_proc.status = IO;
+          }
+          if( signo == SIGUSR2 )
+          {
+            exitHandler(pid);
+            current_proc.status = TERMINATED;
+          }
+          exitCR(semId); // exits CR
+        } /* all signals have been treated */
         
         /////////////////////////////////
         // ENTERS CRITICAL REGION
@@ -177,18 +180,17 @@
         if( current_proc.status == NORMAL )
         {
           int new_queue_id = getLowerPriorityQueueId(current_queue.id);
-          printf("Process %d exceeded its quantum.\n",qnode_getid(current_proc.node));
+          printf("Process %d exceeded its quantum.\n",pid);
           if( new_queue_id == current_queue.id )
           {
             qhead_ins(aux_queue,current_proc.node);
-            printf("Process %d will stay on queue #%d.\n",qnode_getid(current_proc.node),new_queue_id);
+            printf("Process %d will stay on queue #%d.\n", pid,new_queue_id);
           }
           else
           {
             qhead_ins(getQueueFromId(new_queue_id),current_proc.node);
-            printf("Process %d will go from queue #%d to #%d\n",qnode_getid(current_proc.node),current_queue.id, new_queue_id);
+            printf("Process %d will go from queue #%d to #%d\n", pid, current_queue.id, new_queue_id);
           }
-          current_proc.node = NULL;
         }
         /////////////////////////////////
         exitCR(semId);
@@ -229,8 +231,10 @@
   
   int create_queues(void)
   {  
+    if( qhead_create(&signal_queue,-1) != 0 )
+      return fatal_error("Falha ao criar fila de sinais.\n");
     if( qhead_create(&aux_queue,-1) != 0 )
-        return fatal_error("Falha ao criar fila auxiliar.\n");
+      return fatal_error("Falha ao criar fila auxiliar.\n");
     for( int i = 0 ; i < N_OF_QUEUES ; i++ )
       if( qhead_create(proc_queues+i,i) != 0 )
         return fatal_error("Falha ao crier fila #%d.\n",i);
@@ -239,6 +243,7 @@
 
   void destroy_queues(void)
   {
+    qhead_destroy(&signal_queue);
     qhead_destroy(&aux_queue);
     for( int i = 0 ; i < N_OF_QUEUES ; i++ )
       qhead_destroy(proc_queues+i);
@@ -255,7 +260,7 @@
     current_queue.runs_left--; // already wastes by calling
     return getQueueFromId(current_queue.id);
   }
-  
+    
   void forceNextQueue()
   {
     setCurrentQueue((current_queue.id+1)%N_OF_QUEUES);
@@ -284,7 +289,7 @@
   
   int getQueueQuantum(int id) { return myPow2(id)*SMALLEST_QUANTUM; }
     
-  // [!] NOT SAFE WITH SEMAPHORES - MUST USE WHEN CALLING
+  // needs to be called inside a semaphore
   procpack * getCurrentProcessPackage()
   {
     procpack * pack = (procpack *) malloc(sizeof(procpack));
@@ -297,82 +302,52 @@
     return pack;
   }
   
+  // Adds signal to signal queue
   void signalHandler(int signo)
   {    
-    if( signo == SIGUSR1 )
-    {
-      int pid;
-      void * info;
-      pthread_t thread;
-      /////////////////////////////////
-      // ENTERS CRITICAL REGION
-      // Manipulates current process
-      // and current queue. Later on,
-      // another queue too.
-      /////////////////////////////////
-      enterCR(semId);
-      /////////////////////////////////
-      // proccess has entered I/O
-      // a thread will handle it properly
-      pid = qnode_getid(current_proc.node);
-      kill(pid,SIGSTOP);
-      info = (void *) getCurrentProcessPackage(); // inside semaphore
-      pthread_create(&thread,NULL,ioProcessHandler,info);
-      current_proc.status = IO;
-      current_proc.node = NULL;
-      io_threads++;
-      /////////////////////////////////
-      exitCR(semId);
-      /////////////////////////////////
-      // EXITS CRITICAL REGION
-      /////////////////////////////////
-      #ifdef _DEBUG
-      if( io_threads > processes_count )
-      {
-        printf("#Threads > #Processes ! ! !\n");
-        exit(0);
-      }
-      signal_lock = 0;
-      #endif
-    }
-    else if( signo == SIGUSR2 )
-    {
-      if( my_status != PARSING )
-      {
-        qnode dead_node;
-        #ifdef _DEBUG
-        printf("Goodbye cruel world...\n");
-        #endif
-        /////////////////////////////////
-        // ENTERS CRITICAL REGION
-        // Manipulates  the process status
-        // flag and the current queue
-        /////////////////////////////////
-        enterCR(semId);
-        /////////////////////////////////
-        dead_node = current_proc.node;
-        processes_count--;
-        qnode_destroy(&dead_node);
-        current_proc.status = TERMINATED;
-        current_proc.node = NULL;
-        /////////////////////////////////
-        exitCR(semId);
-        /////////////////////////////////
-        // EXITS CRITICAL REGION
-        /////////////////////////////////
-        signal_lock = 0;
-      }
-    }
+    qnode sig;
+    enterCR(semId); // enters CR
+    qnode_create(&sig,signo);
+    qhead_ins(signal_queue,sig);
+    exitCR(semId); // exits CR
   }
   
-  void * ioProcessHandler(void * info)
+  // needs to be called inside a semaphore
+  void ioHandler(int pid)
+  {
+    void * info;
+    pthread_t thread;
+    info = (void *) getCurrentProcessPackage(); // inside semaphore
+    pthread_create(&thread,NULL,ioThreadFunction,info);
+    io_threads++;
+    #ifdef _DEBUG
+    if( io_threads > processes_count )
+    {
+      printf("#Threads > #Processes ! ! !\n");
+      exit(0);
+    }
+    #endif
+  }
+  
+  // needs to be called inside a semaphore
+  void exitHandler(int pid)
+  {
+    qnode dead_node;
+    #ifdef _DEBUG
+    printf("Goodbye cruel world...\n");
+    #endif
+    dead_node = current_proc.node;
+    processes_count--;
+    qnode_destroy(&dead_node);
+    kill(pid,SIGKILL);
+  }
+  
+  void * ioThreadFunction(void * info)
   {
     procpack * pack;
     qnode io_proc;
     qhead new_queue;
     int pid;
-    signal(SIGUSR1,SIG_DFL);
-    signal(SIGCHLD,SIG_DFL);
     pid = qnode_getid(io_proc);
     pack = (procpack *) info;
     io_proc = pack->process;
@@ -387,6 +362,7 @@
     enterCR(semId);
     /////////////////////////////////
     qhead_ins(new_queue,io_proc);
+    io_threads--;
     /////////////////////////////////
     exitCR(semId);
     /////////////////////////////////
@@ -406,6 +382,8 @@
     if(id >= N_OF_QUEUES-1) return N_OF_QUEUES-1;
     return (id+1)%N_OF_QUEUES;
   }
+   
+  void dummy_handler(int signo) {}
    
   int init_interpreter()
   {

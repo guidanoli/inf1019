@@ -26,6 +26,7 @@
     printf("Processo filho %d rodando!\n",pid);
     #endif
     signal(SIGCONT,SIG_DFL);
+    
 	  for( int i = 1 ; i < argc ; i++ )
 	  {
 	    for( int j = 0 ; j < atoi(argv[i]) ; j++ )
@@ -35,10 +36,16 @@
 	    }
 	    if( i < argc - 1 )
 	    {
+	      #ifdef _DEBUG
+        printf("Processo filho %d quer entrar em IO...\n",pid);
+	      #endif
 	      kill(ppid,SIGUSR1); // I am entering IO!
 	      sleep(1);           // make sure not to continue
       }
 	  }
+    #ifdef _DEBUG
+    printf("Processo filho %d quer terminar...\n",pid);
+    #endif
 	  kill(ppid,SIGUSR2); // I want to exit!
 	  sleep(1);
 	  return 0;
