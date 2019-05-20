@@ -13,9 +13,14 @@
         printf("%d-%d\n",i,j);
         sleep(1);
       }
-      kill(getppid(),SIGUSR1);
-      sleep(1);
+      if( i < 2 )
+      {
+        printf("I am calling IO!\n");
+        kill(getppid(),SIGUSR1);
+        sleep(1);
+      }
     }
+    printf("I want to exit!\n");
     kill(getppid(),SIGUSR2);
     return 0;
   }

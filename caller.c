@@ -3,22 +3,24 @@
   #include <unistd.h>
   #include <signal.h>
   #include <sys/types.h>
+  #include "queue.h"
+  #include "semlib.h"
+  
+  #define KEY 12345
   
   int loop = 0;
   int status = 0;
+  int locked = 1;
+  qhead signal_queue;
+  int semId;
   
   void handler(int signo)
   {
-    if( signo == SIGUSR1 )
-    {
-      printf("IO!\n");
-      status = 1;
-    }
-    else if( signo == SIGUSR2 )
-    {
-      printf("TERMINATED!\n");
-      status = 2;
-    }
+    qnode sig;
+    enterCR(semId);
+    qnode_create(&sig,signo);
+    qhead_ins(signal_queue,sig);
+    exitCR(semId);
   }
   
   int main(void)
@@ -29,33 +31,48 @@
       execl("doer","doer",NULL);
     else
     {
-      sleep(1);
       kill(pid,SIGSTOP);
       signal(SIGUSR1,handler);
       signal(SIGUSR2,handler);
+      semId = semCreate(KEY);
+      if( semInit(semId) == -1 )
+      {
+        fprintf(stderr,"Error on sem\n");
+        exit(1);
+      }
+      qhead_create(&signal_queue,1);
       printf("Entering loop\n");
-      while(1)
+      while(status==0)
       {
         printf("Loop #%d\n",loop);
-        sleep(1);
         kill(pid,SIGCONT);
         sleep(3);
         kill(pid,SIGSTOP);
-        sleep(1);
-        if( status == 1 )
+        while(qhead_empty(signal_queue)==QUEUE_FALSE)
         {
-          sleep(3);
+          qnode sig;
+          int signo;
+          enterCR(semId);
+          sig = qhead_rm(signal_queue);
+          signo = qnode_getid(sig);
+          qnode_destroy(&sig);
+          exitCR(semId);
+          if( signo == SIGUSR1 )
+          {
+            printf("IO!\n");
+            sleep(3);
+          }
+          if( signo == SIGUSR2 )
+          {
+            printf("Exit...\n");
+            kill(pid,SIGKILL);
+            status = 1;
+          }
         }
-        if( status == 2 )
-        {
-          printf("Exit...\n");
-          exit(0);
-        }
-        status = 0;
         loop++;
       }
     }
-    
+    semDestroy(semId);
     return 0;
   }
   
