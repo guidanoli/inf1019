@@ -1,6 +1,6 @@
 ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
 ┃                                                                              ┃
-┃  Algorithm (in pseudo-code)                                                  ┃
+┃  Algorithm (in pseudo-code, more abstract)                                   ┃
 ┃  ---------                                                                   ┃
 ┃                                                                              ┃
 ┃  1   def scheduler                                                           ┃
@@ -25,8 +25,9 @@
 ┃  - A queue is a list where you can only add nodes in end and remove          ┃
 ┃  from the beginning                                                          ┃
 ┃  - A node carries only one information: the procedure id (pid)               ┃
-┃  - A procedure is removed from the queue system only when terminated         ┃
-┃  or scheduled. The first, for ever; The last, only on its quantum.           ┃
+┃  - A procedure is removed from the queue system only when terminated,        ┃
+┃  scheduled or blocked. The first, for ever; The second, only on its          ┃
+┃  quantum; The third, while blocked only.                                     ┃
 ┃  - There are 3 queues: F1, F2, F3. One has a higher priority than            ┃
 ┃  the other. F1 > F2 > F3. On the other hand, their quantum are               ┃
 ┃  inversely proportional to their priority. That is, in terms of              ┃
@@ -65,7 +66,16 @@
 ┃                                                                              ┃
 ┃  And the programs will likewise signal the scheduler with:                   ┃
 ┃  SIGUSR1 - The program has entered I/O                                       ┃
-┃  SIGCHD - The program has ended                                              ┃
+┃  SIGUSR2 - The program has ended*                                            ┃
+┃                                                                              ┃
+┃  * the reason for not using SIGCHLD is due to its rogue nature.              ┃
+┃  That is, it is called whenever the child process gets interrup-             ┃
+┃  ted, continued and terminated. This leaves the signal handler               ┃
+┃  in a very ambiguous state if no scheduler state is set globally.            ┃
+┃  Other than that, it makes programatically impossible to deter-              ┃
+┃  mine whether the process terminated or got interrupted by the               ┃
+┃  scheduler (and the later HAS to be done ASAP after passed the               ┃
+┃  the current queue's quantum).                                               ┃
 ┃                                                                              ┃
 ┃  SIGSTOP:                                                                    ┃
 ┃  When a program has entered I/O or has ended its quantum, the                ┃
@@ -73,17 +83,24 @@
 ┃                                                                              ┃
 ┃  SIGCNT:                                                                     ┃
 ┃  When a program has entered its quantum, it has to be awakened from          ┃
-┃  its deep sleep.                                                             ┃
+┃  its deep sleep. Naturally (or simply the way this signal was imple-         ┃
+┃  mented in the Linux Kernel) the program will resume from its pre-           ┃
+┃  vious state (when a SIGSTOP last got caught).                               ┃
 ┃                                                                              ┃
 ┃  SIGUSR1 (I/O):                                                              ┃
-┃  When the program enters  I/O by signalling the scheduler with the           ┃
+┃  When the program enters I/O by signalling the scheduler with the            ┃
 ┃  signal SIGUSR1, it creates a thread that holds the program pid and          ┃
 ┃  stops it, waits some time (in this case, 3 seconds), and then puts          ┃
-┃  it on the queue with one level higher of priority.                          ┃
+┃  it on the queue with one level higher of priority. While on I/O             ┃
+┃  state, the number of processes running does not decrease, but a             ┃
+┃  separate counter for IO threads gets increased when one is created          ┃
+┃  and decreased soon after the process gets correctly inserted in the         ┃
+┃  queue system again. Read more about threads on title "Threads".             ┃
 ┃                                                                              ┃
-┃  SIGCHD:                                                                     ┃
+┃  SIGUSR2 (TERMINATED):                                                       ┃
 ┃  When the program dies, the scheduler has remove it from its                 ┃
-┃  internal structure.                                                         ┃
+┃  internal structure. Also, globally, the number of running                   ┃
+┃  processes has to decrease.                                                  ┃
 ┃                                                                              ┃
 ┃  Queues:                                                                     ┃
 ┃  ------                                                                      ┃
@@ -100,7 +117,7 @@
 ┃                                                                              ┃
 ┃  In C, there will be an auxiliary queue that will store all the              ┃
 ┃  processes that persisted in the same queue, and when the queue              ┃
-┃  empties, they are move the main queue in order. That way it will            ┃
+┃  empties, they are move TO the main queue in order. That way it will         ┃
 ┃  be possible to determine how many times are necessary for a queue           ┃
 ┃  to be emptied.                                                              ┃
 ┃                                                                              ┃
@@ -111,43 +128,19 @@
 ┃                                                                              ┃
 ┃  There needs to be a thread count. Why? Well, imagine a situation where      ┃
 ┃  all processes have entered I/O and next time the scheduler checks if        ┃
-┃  there are any running processes or processes in any queue, it finds none    ┃
-┃  and terminates. This occurrs because in this naive implementation, the      ┃
-┃  scheduler was not aware of the processes on I/O waiting to be inserted      ┃
-┃  again on the queues.                                                        ┃
+┃  there are any processes in queue, it finds none and terminates. This        ┃
+┃  occurrs because in this naive implementation, the scheduler was not         ┃
+┃  aware of the processes on I/O waiting to be inserted again in a queue.      ┃
 ┃                                                                              ┃
 ┃  This problem can be solved by the use of a thread counter that is           ┃
-┃  increased before the scheduler creates a thread for a proccess that         ┃
+┃  increased when the scheduler creates a thread for a proccess that           ┃
 ┃  will be entering I/O, and decreased when a given thread is terminated.      ┃
 ┃                                                                              ┃
 ┃  Obviously, the use of mutexes is undeniably fundamental to keep the         ┃
 ┃  counter consistent.                                                         ┃
 ┃                                                                              ┃
-┃  That way, the scheduler not only has to check for processes in its queues   ┃
-┃  but also if there is any thread currently handling a process in I/O.        ┃
-┃                                                                              ┃
-┃  Future improvements:                                                        ┃
-┃  -------------------                                                         ┃
-┃                                                                              ┃
-┃  * Make scheduler sleep when there are I/O bound processes running but       ┃
-┃  none on CPU (queues). Before a I/O process handler thread terminates,       ┃
-┃  check if io_processes count is zero, and, if so, it has to wake up          ┃
-┃  (signal SIGUSR2) the scheduler.                                             ┃
-┃                                                                              ┃
-┃  SIGCHLD:                                                                    ┃
-┃  -------                                                                     ┃
-┃                                                                              ┃
-┃  This signal is called whenever a child process is terminated, or            ┃
-┃  interrupted or resumed. That means that there needs to be some filtering    ┃
-┃  and process only those generated when the program is terminated.            ┃
-┃                                                                              ┃
-┃  This is done by creating a program status, which can be:                    ┃
-┃  * MANAGING (or normal)                                                      ┃
-┃  * EXECUTING                                                                 ┃
-┃                                                                              ┃
-┃  ...when executing, SIGCHLD necessairly means that the child process         ┃
-┃  was terminates. Anywhere else in the main function, the scheduler is        ┃
-┃  managing, and SIGCHLD will be ignored.                                      ┃
+┃  That way, the scheduler has to not only check for processes in its queues   ┃
+┃  but also if there is any thread currently handling a process in I/O.        ┃                                      ┃
 ┃                                                                              ┃
 ┃  Alternative Algorithm (in pseudo-code, but more progamatic)                 ┃
 ┃  ---------------------                                                       ┃
@@ -183,6 +176,6 @@
 ┃  29  | end                                                                   ┃
 ┃  30  end                                                                     ┃
 ┃                                                                              ┃
-┃                                                                              ┃
+┃  Written by Guilherme Dantas on May 20th 2019                                ┃
 ┃                                                                              ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
