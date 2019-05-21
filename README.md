@@ -1,6 +1,7 @@
 # Multi-level Scheduling with Feedback
 
-The goal of this project is to implement a command interpreter and process scheduler in C programming language, making use of not only the standard C library (mainly signal.h, pthread.h and sys/sem.h) but also modules implemented solely by me. The list that follows might guide you, newcomer, through this project folder.
+The goal of this project is to implement a command interpreter and process scheduler in **C programming language**, making use of not only the **standard C library** (mainly *signal.h*, *pthread.h* and *sys/sem.h*) but also modules implemented solely by me.\
+The list that follows might guide you, newcomer, through this project folder.
 
 ## Files
 
@@ -20,18 +21,28 @@ In order to generate the binaries, you should choose between one of the followin
 
 ### Release (less verbose)
 
-```bash
+```console
 $ make -B
 ```
 
 ### Debug (more verbose)
 
-```bash
+```console
 $ make debug -B
 ```
 
 **PS: The -B flag is just to overwrite any files when switching from distributions**
 
+### Cleaning up
+
+The Makefile naturally floods your workspace folder with object files and whatnot.\
+To cleanse your working enviroment, I've setup a basic cleaning routine that can be initalized by the following command.
+
+```console
+$ make clean
+```
+
 ## Credits
 
-The INF1019 Computing Systems course is oriented by the professor Luiz Fernando Bessa Seibel The proper credits for the semaphore module can be found either in its source code or in its header.
+The INF1019 Computing Systems course is oriented by the professor Luiz Fernando Bessa Seibel\
+The proper credits for the semaphore module can be found either in its source code or in its header.
