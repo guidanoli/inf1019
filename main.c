@@ -14,7 +14,7 @@
   #include "queue.h"
   
   #define FIRST_QUEUE_ID 0
-  #define SMALLEST_QUANTUM 1
+  #define SMALLEST_QUANTUM 2
   #define IO_BLOCK_TIME 3
   #define N_OF_QUEUES 3
   #define ARG_SIZE 64
