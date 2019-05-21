@@ -1,5 +1,5 @@
   
-  // queue - Queue module
+  // queue - Queue module implementation
   // Guilherme Dantas
 
   #include <stdio.h>

@@ -1,5 +1,5 @@
 
-  // Interpretador e Escalonador
+  // Interpreter & Scheduler
   // Guilherme Dantas
 
   #include <stdio.h>
@@ -103,8 +103,8 @@
     setCurrentQueue(FIRST_QUEUE_ID);
     
     #ifdef _DEBUG
-    printf("Há %d processos na fila de processos prontos para serem executados.\n",processes_count);
-    printf("Iniciando escalonamento...\n");
+    printf("There are %d processes waiting to be executed.\n",processes_count);
+    printf("Starting scheduler...\n");
     #endif
         
     /* main loop */
@@ -124,7 +124,7 @@
         quantum = getQueueQuantum(current_queue.id);
         #ifdef _DEBUG
         if( qhead_empty(queue) == QUEUE_FALSE )
-          printf("Escalonador está manipulando a fila #%d.\n",current_queue.id);
+          printf("The scheduler is dealing with queue #%d.\n",current_queue.id);
         #endif
       }
       
@@ -154,7 +154,7 @@
         if( !flag ) break;
         
         #ifdef _DEBUG
-        printf("Escalonando processo %d...\n",pid);
+        printf("Scheduling process %d...\n",pid);
         #endif
         
         kill(pid,SIGCONT);
@@ -162,7 +162,7 @@
         kill(pid,SIGSTOP);
         
         #ifdef _DEBUG
-        printf("Processo %d interrompido.\n",pid);
+        printf("Interrupted process %d.\n",pid);
         #endif
         
         /////////////////////////////////
@@ -205,20 +205,21 @@
         {
           int new_queue_id = getLowerPriorityQueueId(current_queue.id);
           #ifdef _DEBUG
-          printf("Processo %d excedeu o quantum da fila igual a %d u.t. .\n",pid,quantum);
+          printf("Process %d exceeded queue quantum of %d time units .\n",pid,quantum);
           #endif
           if( new_queue_id == current_queue.id )
           {
             qhead_ins(aux_queue,current_proc.node);
             #ifdef _DEBUG
-            printf("Processo %d continuará na fila #%d.\n", pid,new_queue_id);
+            printf("Process %d will remain in queue #%d.\n", pid,new_queue_id);
             #endif
           }
           else
           {
             qhead_ins(getQueueFromId(new_queue_id),current_proc.node);
             #ifdef _DEBUG
-            printf("Processo %d migrará da fila #%d para fila #%d\n", pid, current_queue.id, new_queue_id);
+            printf("Process %d will migrate from queue #%d to queue #%d\n",
+            pid, current_queue.id, new_queue_id);
             #endif
           }
         }
@@ -235,7 +236,7 @@
       enterCR(semId);
       /////////////////////////////////
       if( qhead_transfer(aux_queue,queue,QFLAG_TRANSFER_ALL) != QUEUE_OK )
-        return fatal_error("Erro ao administrar filas auxiliares\n");
+        return fatal_error("An error occurred while managing auxiliary queue\n");
       /////////////////////////////////
       exitCR(semId);
       /////////////////////////////////
@@ -244,7 +245,7 @@
     }
     
     #ifdef _DEBUG
-    printf("Fim do escalonamento. Todos os processos terminados.\n");
+    printf("End of scheduling. All processes have been executed.\n");
     #endif
     
     /* safely destroying semaphore */
@@ -273,12 +274,12 @@
   int create_queues(void)
   {  
     if( qhead_create(&signal_queue,-1) != 0 )
-      return fatal_error("Falha ao criar fila de sinais.\n");
+      return fatal_error("Could not create signal queue.\n");
     if( qhead_create(&aux_queue,-1) != 0 )
-      return fatal_error("Falha ao criar fila auxiliar.\n");
+      return fatal_error("Could not create auxiliary queue.\n");
     for( int i = 0 ; i < N_OF_QUEUES ; i++ )
       if( qhead_create(proc_queues+i,i) != 0 )
-        return fatal_error("Falha ao crier fila #%d.\n",i);
+        return fatal_error("Could not create queue #%d.\n",i);
     return 0;
   }
 
@@ -301,7 +302,7 @@
     {
       #ifdef _DEBUG
       if( processes_count != io_threads && qhead_empty(current_queue.queue) == QUEUE_FALSE )
-        printf("Fila #%d chegou à sua cota de %d corridas.\n",current_queue.id,getQueueRuns(current_queue.id));
+        printf("Queue #%d has reached its limit of %d cycles.\n",current_queue.id,getQueueRuns(current_queue.id));
       #endif
       forceNextQueue();
     }
@@ -342,7 +343,7 @@
   {
     procpack * pack = (procpack *) malloc(sizeof(procpack));
     if( pack == NULL ){
-      fprintf(stderr,"Não foi possível alocar espaço na memória.\n");
+      fprintf(stderr,"Could not allocate memory.\n");
       exit(0); //abort program
     }
     pack->process = current_proc.node;
@@ -385,18 +386,18 @@
     processes_count--;
     qnode_destroy(&dead_node);
     kill(pid,SIGKILL);
-    printf("Processo %d terminou.\n",pid);
+    printf("Process %d finished.\n",pid);
     #ifdef _DEBUG
     dump_queues();
     #endif
     if( processes_count > 0 )
     {
-      printf("Há %d processos restantes\n",processes_count);
-      printf("* %d em fila\n",processes_count-io_threads);
-      printf("* %d em IO\n",io_threads);
+      printf("There are %d remaining processes\n",processes_count);
+      printf("* %d in queue\n",processes_count-io_threads);
+      printf("* %d blocked by IO\n",io_threads);
     }
     else
-      printf("Não há processos restantes\n");
+      printf("No remaining processes\n");
     
   }
   
@@ -411,7 +412,7 @@
     my_pid = qnode_getid(io_proc);
     new_queue = pack->queue;
     //free(info);
-    printf("Processo %d está em IO.\n",my_pid);
+    printf("Process %d is blocked by IO.\n",my_pid);
     sleep(IO_BLOCK_TIME); // simulating IO
     /////////////////////////////////
     // ENTERS CRITICAL REGION
@@ -422,7 +423,7 @@
     /////////////////////////////////
     qhead_ins(new_queue,io_proc);
     io_threads--;
-    printf("Processo %d terminou IO.\n",my_pid);
+    printf("Processo %d is no longer blocked by IO.\n",my_pid);
     /////////////////////////////////
     exitCR(semId);
     /////////////////////////////////
@@ -452,7 +453,7 @@
     {
       qhead f = proc_queues[i];
       qhead aux;
-      printf("Fila #%d: %s\n",i,(qhead_empty(f)==QUEUE_OK)?"vazia":"não vazia");
+      printf("Fila #%d: %s\n",i,(qhead_empty(f)==QUEUE_OK)?"empty":"not empty");
       qhead_create(&aux,-1);
       while( qhead_empty(f) == QUEUE_FALSE )
       {
@@ -478,19 +479,19 @@
       
       if( scanf("xec %s (%d",prog,raj) != 2 )
       { 
-        return fatal_error("String mal formatada.\n");
+        return fatal_error("Bad string format.\n");
       }
       while((c = fgetc(stdin)) == ',')
       {
         if( scanf("%d",raj+qt_raj) != 1 )
         {
-          return fatal_error("String mal formatada.\n");
+          return fatal_error("Bad string format.\n");
         }
         qt_raj++;
       }
       if( c != ')' )
       {
-        return fatal_error("String mal formatada.\n");
+        return fatal_error("Bad string format.\n");
       }
       scanf(" ");
       
@@ -510,10 +511,10 @@
           }
         }
         args[qt_raj+1] = NULL;
-        printf("Processo filho %d executando... %s\n",getpid(),buffer);
+        printf("Child process %d executing... %s\n",getpid(),buffer);
         if( execv(*args,args) == -1 )
         {
-          return fatal_error("Não foi possível executar programa %d.\n",getpid());
+          return fatal_error("Could not execute process %d.\n",getpid());
         }
         exit(0);
       }
@@ -524,14 +525,14 @@
         qnode process;
         if( qnode_create(&process,pid) != 0 )
         {
-          fprintf(stderr,"Não foi possível alocar espaço na memória.\n");
+          fprintf(stderr,"Could not allocate memmory.\n");
           return EXIT_FAILURE;
         }
         qhead_ins(proc_queues[FIRST_QUEUE_ID],process);
         sleep(1);
         processes_count++;
         #ifdef _DEBUG
-        printf("Processo filho %d inserido na fila #%d\n",pid,FIRST_QUEUE_ID);
+        printf("Child process %d inserted in queue #%d\n",pid,FIRST_QUEUE_ID);
         #endif
       }
     } /* end parsing */

@@ -11,7 +11,7 @@
   {
     int ppid = getppid(), pid = getpid();
     #ifdef _DEBUG
-    printf("Processo filho %d pronto para ser executado.\n",pid);
+    printf("Child process %d ready to be executed.\n",pid);
     #endif
     kill(ppid,SIGUSR2); // I am running!
     sleep(1);
@@ -25,14 +25,14 @@
 	    if( i < argc - 1 )
 	    {
 	      #ifdef _DEBUG
-        printf("Processo filho %d manda um sinal para pai para entrar em IO...\n",pid);
+        printf("Child process %d requests parent to block him (IO)...\n",pid);
 	      #endif
 	      kill(ppid,SIGUSR1); // I am entering IO!
 	      sleep(1);           // make sure not to continue
       }
 	  }
     #ifdef _DEBUG
-    printf("Processo filho %d manda um sinal para pai para terminar...\n",pid);
+    printf("Child process %d requests parent to terminate him (EOF)...\n",pid);
     #endif
 	  kill(ppid,SIGUSR2); // I want to exit!
 	  sleep(1);
