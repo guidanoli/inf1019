@@ -14,7 +14,7 @@
   #include "queue.h"
   
   #define FIRST_QUEUE_ID 0
-  #define SMALLEST_QUANTUM 2
+  #define SMALLEST_QUANTUM 1
   #define IO_BLOCK_TIME 3
   #define N_OF_QUEUES 3
   #define ARG_SIZE 64
@@ -423,7 +423,7 @@
     /////////////////////////////////
     qhead_ins(new_queue,io_proc);
     io_threads--;
-    printf("Processo %d is no longer blocked by IO.\n",my_pid);
+    printf("Process %d is no longer blocked by IO.\n",my_pid);
     /////////////////////////////////
     exitCR(semId);
     /////////////////////////////////
@@ -453,7 +453,7 @@
     {
       qhead f = proc_queues[i];
       qhead aux;
-      printf("Fila #%d: %s\n",i,(qhead_empty(f)==QUEUE_OK)?"empty":"not empty");
+      printf("Queue #%d: %s\n",i,(qhead_empty(f)==QUEUE_OK)?"empty":"not empty");
       qhead_create(&aux,-1);
       while( qhead_empty(f) == QUEUE_FALSE )
       {
