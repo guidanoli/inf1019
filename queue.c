@@ -1,4 +1,4 @@
-  
+
   // queue - Queue module implementation
   // Guilherme Dantas
 
@@ -7,13 +7,13 @@
   #include "queue.h"
 
   typedef struct queue_node_s {
-    int id;       // id
+    void * info;  // information
     qnode next;   // next
   } queue_node;
 
   typedef struct queue_head_s {
     int id;      // id
-    qnode ini;   // initial  
+    qnode ini;   // initial
     qnode end;   // ending
   } queue_head;
 
@@ -28,32 +28,34 @@
   ///////////////////////////////////////////
 
   // Create node
-  // id is the node's identification
-  // Returns pointer to node or NULL (mem) in *pnode
+  // info is the node's information
+  // Returns pointer to node in *pnode
   // Returns OK, NULL or MEM
-  queue_ret qnode_create ( qnode * pnode , int id )
+  queue_ret qnode_create ( qnode * pnode , void * info )
   {
     qnode node;
     if( pnode == NULL ) return QUEUE_NULL;
+    if( info == NULL ) return QUEUE_NULL;
     node = ( qnode ) malloc(sizeof(queue_node));
     if( node == NULL ) return QUEUE_MEM;
-    node->id = id;
+    node->info = info;
     node->next = NULL;
     *pnode = node;
     return QUEUE_OK;
   }
 
-  // Get node id
+  // Get node information
   // node is pointer to node
-  // Returns id or -1 if null
-  int qnode_getid ( qnode node )
+  // Returns information or null
+  void * qnode_getinfo ( qnode node )
   {
     if( node == NULL ) return -1;
-    return node->id;
+    return node->info;
   }
 
   // Destroy node
   // node is pointer to pointer to node
+  // Does not free information pointed by node
   void qnode_destroy ( qnode * node )
   {
     if( node && *node )
@@ -176,6 +178,3 @@
     for( qnode q = head->ini; q != NULL ; q = q->next ) if( q == node ) return 1;
     return 0;
   }
-  
-  
-  

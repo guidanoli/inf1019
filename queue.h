@@ -1,4 +1,4 @@
-  
+
   // Queue module interface
   // Guilherme Dantas
 
@@ -10,7 +10,7 @@
   ///////////////////////////////////////////
   // QUEUE MODULE CONSTANTS
   ///////////////////////////////////////////
-  
+
   typedef struct queue_head_s * qhead;
   typedef struct queue_node_s * qnode;
 
@@ -27,18 +27,19 @@
   ///////////////////////////////////////////
 
   // Create node
-  // id is the node's identification
-  // Returns pointer to node or NULL (mem) in *pnode
+  // info is the node's information
+  // Returns pointer to node in *pnode
   // Returns OK, NULL or MEM
-  queue_ret qnode_create ( qnode * pnode , int id );
+  queue_ret qnode_create ( qnode * pnode , void * info );
 
-  // Get node id
+  // Get node information
   // node is pointer to node
-  // Returns id or -1 if null
-  int qnode_getid ( qnode node );
+  // Returns information or null
+  void * qnode_getinfo ( qnode node );
 
   // Destroy node
   // node is pointer to pointer to node
+  // Does not free information pointed by node
   void qnode_destroy ( qnode * node );
 
   ////////////////////////////////////////////////
@@ -72,7 +73,7 @@
   // Returns  node if successful or
   //          NULL if head is NULL or queue is empty
   qnode qhead_rm ( qhead head );
-  
+
   // Transfers qtd nodes from src to dest
   // src is pointer to source queue
   // dest is pointer to destintation queue
@@ -98,7 +99,3 @@
   void qhead_destroy ( qhead * head );
 
   #endif
-
-
-
-
