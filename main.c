@@ -109,12 +109,6 @@
     {
       if( processes_count <= 0 ) break;
 
-      // there is no need for mutex here
-      // since the processes_count only
-      // decreases and it only reads the
-      // content of process_count and does
-      // not modify it.
-
       if( processes_count != io_threads )
       {
         queue = getUpdatedQueue();
@@ -150,6 +144,7 @@
         /////////////////////////////////
         // EXITS CRITICAL REGION
         /////////////////////////////////
+
         if( !flag ) break;
         procname = procinfo->name;
         quantum_timer = 0;
@@ -160,8 +155,7 @@
 
         kill(pid,SIGCONT);
         int ray_end = getNextRayAge(procinfo->rays, procinfo->rays_count, procinfo->age);
-        while(  procinfo->age < ray_end
-                && quantum_timer < quantum ); // wait
+        while(  procinfo->age < ray_end && quantum_timer < quantum ); // wait
         kill(pid,SIGSTOP);
 
         /////////////////////////////////
@@ -175,19 +169,18 @@
           int termination_age = getRaySum(procinfo->rays,procinfo->rays_count);
           if( procinfo->age == termination_age )
           {
-            // TERMINATED
             printf("Process %s was terminated.\n",procname);
-            exitHandler(pid);
+            exitHandler(pid); // TERMINATED
           }
           else
           {
-            // IO
-            ioHandler(pid);
-            dump_queues();
+            printf("Process %s was blocked by IO.\n",procname);
+            ioHandler(pid); // IO
           }
         }
         else
         {
+          // CPU
           int new_queue_id = getLowerPriorityQueueId(current_queue.id);
           #ifdef _DEBUG
           printf("Process %s was interrupted for exceeding queue quantum of %d time units .\n",procname,quantum);
@@ -207,8 +200,8 @@
             procname, current_queue.id, new_queue_id);
             #endif
           }
-          dump_queues();
         }
+        dump_queues();
         /////////////////////////////////
         exitCR(semId);
         /////////////////////////////////
@@ -387,18 +380,6 @@
     processes_count--;
     qnode_destroy(&dead_node);
     kill(pid,SIGKILL);
-    #ifdef _DEBUG
-    dump_queues();
-    #endif
-    if( processes_count > 0 )
-    {
-      printf("There are %d remaining processes\n",processes_count);
-      printf("* %d in queue\n",processes_count-io_threads);
-      printf("* %d blocked by IO\n",io_threads);
-    }
-    else
-      printf("No remaining processes\n");
-
   }
 
   void * ioThreadFunction(void * info)
@@ -414,7 +395,6 @@
     procname = procinfo->name;
     my_pid = procinfo->pid;
     new_queue = pack->queue;
-    printf("Process %s was blocked by IO.\n",procname);
     sleep(IO_BLOCK_TIME); // simulating IO
     /////////////////////////////////
     // ENTERS CRITICAL REGION
@@ -425,7 +405,8 @@
     /////////////////////////////////
     qhead_ins(new_queue,io_proc);
     io_threads--;
-    printf("Process %s is no longer blocked by IO.\n",procname);
+    printf("Process %s is no longer blocked by IO and was inserted in queue #%d.\n"
+    ,procname,qhead_getid(new_queue));
     /////////////////////////////////
     exitCR(semId);
     /////////////////////////////////
@@ -481,6 +462,16 @@
       }
       qhead_destroy(&aux);
     }
+    if( processes_count > 0 )
+    {
+      int one = processes_count == 1;
+      printf("There %s %d remaining process%s\n",one?"is":"are",processes_count,
+              one?"":"es");
+      printf("* %d in queue\n",processes_count-io_threads);
+      printf("* %d blocked by IO\n",io_threads);
+    }
+    else
+      printf("No remaining processes\n");
   }
 
   void dump_process(process procinfo)
