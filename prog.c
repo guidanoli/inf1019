@@ -1,5 +1,5 @@
 
-  // Processo usuário
+  // User process
   // Guilherme Dantas
 
   #include <stdio.h>
@@ -14,9 +14,9 @@
 	  {
 	    for( int j = 0 ; j < atoi(argv[i]) ; j++ )
 	    {
+        sleep(1);
 	      printf("%d\n",pid);
-	      sleep(1); // CPU
-        kill(ppid,SIGUSR1); // I am entering IO!
+        kill(ppid,SIGUSR1); // One second has passed!
 	    }
 	    if( i < argc - 1 )
 	    {

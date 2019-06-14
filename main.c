@@ -129,7 +129,6 @@
       while( 1 )
       {
         int flag = 0;
-        int quantum_timer = 0;
         char * procname;
         process procinfo;
         /////////////////////////////////
@@ -153,6 +152,7 @@
         /////////////////////////////////
         if( !flag ) break;
         procname = procinfo->name;
+        quantum_timer = 0;
 
         #ifdef _DEBUG
         printf("Scheduling process %s...\n",procname);
@@ -170,7 +170,7 @@
         /////////////////////////////////
         enterCR(semId);
         /////////////////////////////////
-        if( quantum_timer <= quantum )
+        if( procinfo->age == ray_end )
         {
           int termination_age = getRaySum(procinfo->rays,procinfo->rays_count);
           if( procinfo->age == termination_age )
@@ -183,6 +183,7 @@
           {
             // IO
             ioHandler(pid);
+            dump_queues();
           }
         }
         else
@@ -206,6 +207,7 @@
             procname, current_queue.id, new_queue_id);
             #endif
           }
+          dump_queues();
         }
         /////////////////////////////////
         exitCR(semId);
@@ -352,7 +354,6 @@
   // Adds signal to signal queue
   void signalHandler(int signo)
   {
-    // new
     if( signo == SIGUSR1 )
     {
       quantum_timer++;
