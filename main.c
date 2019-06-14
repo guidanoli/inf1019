@@ -54,7 +54,6 @@
 
   // semaphore and queues
   int semId = 0;
-  qhead signal_queue;
 
   // functions
   int fatal_error(const char * err_msg_format, ...);
@@ -70,7 +69,6 @@
   qhead getUpdatedQueue();
   void setCurrentQueue(int id);
   void forceNextQueue();
-  void dummy_handler(int signo);
   void ioHandler(int pid);
   void signalHandler(int signo);
   void * ioThreadFunction(void * info);
@@ -93,155 +91,155 @@
     if((semId = semCreate(SEM_KEY))==-1) return EXIT_FAILURE;
     if(semInit(semId)==-1) return EXIT_FAILURE;
 
-    /* initialize interpreter signal handler */
-    signal(SIGUSR2,dummy_handler);
-
     /* parse args from stdin and build queues */
     if((ret=init_interpreter())!=0) return ret;
-    //
-    // /* initialize scheduler signal handlers */
-    // signal(SIGUSR1,signalHandler);
-    // signal(SIGUSR2,signalHandler);
-    //
-    // /* start from queue of highest priority */
-    // setCurrentQueue(FIRST_QUEUE_ID);
-    //
-    // #ifdef _DEBUG
-    // printf("There are %d processes waiting to be executed.\n",processes_count);
-    // printf("Starting scheduler...\n");
-    // #endif
-    //
-    // /* main loop */
-    // while( 1 )
-    // {
-    //   if( processes_count <= 0 ) break;
-    //
-    //   // there is no need for mutex here
-    //   // since the processes_count only
-    //   // decreases and it only reads the
-    //   // content of process_count and does
-    //   // not modify it.
-    //
-    //   if( processes_count != io_threads )
-    //   {
-    //     queue = getUpdatedQueue();
-    //     quantum = getQueueQuantum(current_queue.id);
-    //     #ifdef _DEBUG
-    //     if( qhead_empty(queue) == QUEUE_FALSE )
-    //       printf("The scheduler is dealing with queue #%d.\n",current_queue.id);
-    //     #endif
-    //   }
-    //
-    //   /* current process loop */
-    //   while( 1 )
-    //   {
-    //     int flag = 0;
-    //     int quantum_timer = 0;
-    //     process procinfo;
-    //     /////////////////////////////////
-    //     // ENTERS CRITICAL REGION
-    //     // Manipulates current process
-    //     // and current queue
-    //     /////////////////////////////////
-    //     enterCR(semId);
-    //     /////////////////////////////////
-    //     if( qhead_empty(queue) == QUEUE_FALSE )
-    //     {
-    //       current_proc = qhead_rm(queue);
-    //       procinfo = (process) qnode_getinfo(current_proc);
-    //       pid = procinfo->pid;
-    //       flag = 1;
-    //     }
-    //     /////////////////////////////////
-    //     exitCR(semId);
-    //     /////////////////////////////////
-    //     // EXITS CRITICAL REGION
-    //     /////////////////////////////////
-    //     if( !flag ) break;
-    //
-    //     #ifdef _DEBUG
-    //     printf("Scheduling process %d...\n",pid);
-    //     #endif
-    //
-    //     kill(pid,SIGCONT);
-    //     while(  procinfo->age < getNextRayAge(procinfo->rays, procinfo->rays_count, procinfo->age)
-    //             && quantum_timer < quantum ); // wait
-    //     kill(pid,SIGSTOP);
-    //
-    //     #ifdef _DEBUG
-    //     printf("Interrupted process %d.\n",pid);
-    //     #endif
-    //
-    //     /////////////////////////////////
-    //     // ENTERS CRITICAL REGION
-    //     // Manipulates current process
-    //     /////////////////////////////////
-    //     enterCR(semId);
-    //     /////////////////////////////////
-    //
-    //     // new
-    //     if( quantum_timer <= quantum )
-    //     {
-    //       // IO
-    //       ioHandler(pid);
-    //     }
-    //     else
-    //     {
-    //       if( procinfo->age == getRaySum(procinfo->rays,procinfo->rays_count) )
-    //       {
-    //         // TERMINATED
-    //         exitHandler(pid);
-    //       }
-    //       else
-    //       {
-    //         int new_queue_id = getLowerPriorityQueueId(current_queue.id);
-    //         #ifdef _DEBUG
-    //         printf("Process %d exceeded queue quantum of %d time units .\n",pid,quantum);
-    //         #endif
-    //         if( new_queue_id == current_queue.id )
-    //         {
-    //           qhead_ins(aux_queue,current_proc);
-    //           #ifdef _DEBUG
-    //           printf("Process %d will remain in queue #%d.\n", pid,new_queue_id);
-    //           #endif
-    //         }
-    //         else
-    //         {
-    //           qhead_ins(getQueueFromId(new_queue_id),current_proc);
-    //           #ifdef _DEBUG
-    //           printf("Process %d will migrate from queue #%d to queue #%d\n",
-    //           pid, current_queue.id, new_queue_id);
-    //           #endif
-    //         }
-    //       }
-    //     }
-    //     /////////////////////////////////
-    //     exitCR(semId);
-    //     /////////////////////////////////
-    //     // EXITS CRITICAL REGION
-    //     /////////////////////////////////
-    //   }
-    //   /////////////////////////////////
-    //   // ENTERS CRITICAL REGION
-    //   // Manipulates auxiliary queue
-    //   /////////////////////////////////
-    //   enterCR(semId);
-    //   /////////////////////////////////
-    //   if( qhead_transfer(aux_queue,queue,QFLAG_TRANSFER_ALL) != QUEUE_OK )
-    //     return fatal_error("An error occurred while managing auxiliary queue\n");
-    //   /////////////////////////////////
-    //   exitCR(semId);
-    //   /////////////////////////////////
-    //   // EXITS CRITICAL REGION
-    //   /////////////////////////////////
-    // }
-    //
-    // #ifdef _DEBUG
-    // printf("End of scheduling. All processes have been executed.\n");
-    // #endif
-    //
-    // /* safely destroying semaphore */
-    // semDestroy(semId);
+
+    /* initialize scheduler signal handlers */
+    signal(SIGUSR1,signalHandler);
+
+    /* start from queue of highest priority */
+    setCurrentQueue(FIRST_QUEUE_ID);
+
+    #ifdef _DEBUG
+    printf("======= SCHEDULING %d PROCESS%s...\n",processes_count,processes_count==1?"":"ES");
+    #endif
+
+    /* main loop */
+    while( 1 )
+    {
+      if( processes_count <= 0 ) break;
+
+      // there is no need for mutex here
+      // since the processes_count only
+      // decreases and it only reads the
+      // content of process_count and does
+      // not modify it.
+
+      if( processes_count != io_threads )
+      {
+        queue = getUpdatedQueue();
+        quantum = getQueueQuantum(current_queue.id);
+        #ifdef _DEBUG
+        if( qhead_empty(queue) == QUEUE_FALSE )
+          printf("The scheduler is dealing with queue #%d.\n",current_queue.id);
+        #endif
+      }
+
+      /* current process loop */
+      while( 1 )
+      {
+        int flag = 0;
+        int quantum_timer = 0;
+        char * procname;
+        process procinfo;
+        /////////////////////////////////
+        // ENTERS CRITICAL REGION
+        // Manipulates current process
+        // and current queue
+        /////////////////////////////////
+        enterCR(semId);
+        /////////////////////////////////
+        if( qhead_empty(queue) == QUEUE_FALSE )
+        {
+          current_proc = qhead_rm(queue);
+          procinfo = (process) qnode_getinfo(current_proc);
+          pid = procinfo->pid;
+          flag = 1;
+        }
+        /////////////////////////////////
+        exitCR(semId);
+        /////////////////////////////////
+        // EXITS CRITICAL REGION
+        /////////////////////////////////
+        if( !flag ) break;
+        procname = procinfo->name;
+
+        #ifdef _DEBUG
+        printf("Scheduling process %s...\n",procname);
+        #endif
+
+        kill(pid,SIGCONT);
+        int ray_end = getNextRayAge(procinfo->rays, procinfo->rays_count, procinfo->age);
+        while(  procinfo->age < ray_end
+                && quantum_timer < quantum ); // wait
+        kill(pid,SIGSTOP);
+
+        #ifdef _DEBUG
+        printf("Interrupted process %s.\n",procname);
+        #endif
+
+        /////////////////////////////////
+        // ENTERS CRITICAL REGION
+        // Manipulates current process
+        /////////////////////////////////
+        enterCR(semId);
+        /////////////////////////////////
+
+        // new
+        if( quantum_timer <= quantum )
+        {
+          int termination_age = getRaySum(procinfo->rays,procinfo->rays_count);
+          if( procinfo->age == termination_age )
+          {
+            // TERMINATED
+            printf("Process %s finished.\n",procname);
+            exitHandler(pid);
+          }
+          else
+          {
+            // IO
+            ioHandler(pid);
+          }
+        }
+        else
+        {
+          int new_queue_id = getLowerPriorityQueueId(current_queue.id);
+          #ifdef _DEBUG
+          printf("Process %s exceeded queue quantum of %d time units .\n",procname,quantum);
+          #endif
+          if( new_queue_id == current_queue.id )
+          {
+            qhead_ins(aux_queue,current_proc);
+            #ifdef _DEBUG
+            printf("Process %s will remain in queue #%d.\n", procname,new_queue_id);
+            #endif
+          }
+          else
+          {
+            qhead_ins(getQueueFromId(new_queue_id),current_proc);
+            #ifdef _DEBUG
+            printf("Process %s will migrate from queue #%d to queue #%d\n",
+            procname, current_queue.id, new_queue_id);
+            #endif
+          }
+        }
+        /////////////////////////////////
+        exitCR(semId);
+        /////////////////////////////////
+        // EXITS CRITICAL REGION
+        /////////////////////////////////
+      }
+      /////////////////////////////////
+      // ENTERS CRITICAL REGION
+      // Manipulates auxiliary queue
+      /////////////////////////////////
+      enterCR(semId);
+      /////////////////////////////////
+      if( qhead_transfer(aux_queue,queue,QFLAG_TRANSFER_ALL) != QUEUE_OK )
+        return fatal_error("An error occurred while managing auxiliary queue\n");
+      /////////////////////////////////
+      exitCR(semId);
+      /////////////////////////////////
+      // EXITS CRITICAL REGION
+      /////////////////////////////////
+    }
+
+    #ifdef _DEBUG
+    printf("======= END OF SCHEDULING\n\n");
+    #endif
+
+    /* safely destroying semaphore */
+    semDestroy(semId);
 
     /* safely freeing queues */
     destroy_queues();
@@ -258,15 +256,15 @@
   {
     va_list vl;
     va_start(vl, err_msg_format);
+    printf("\033[0;31m"); // TEXT IS NOW RED
     vfprintf(stderr,err_msg_format,vl);
+    printf("\033[0m"); // text is now back to default color
     va_end(vl);
     return EXIT_FAILURE;
   }
 
   int create_queues(void)
   {
-    if( qhead_create(&signal_queue,-1) != 0 )
-      return fatal_error("Could not create signal queue.\n");
     if( qhead_create(&aux_queue,-1) != 0 )
       return fatal_error("Could not create auxiliary queue.\n");
     for( int i = 0 ; i < N_OF_QUEUES ; i++ )
@@ -277,7 +275,6 @@
 
   void destroy_queues(void)
   {
-    qhead_destroy(&signal_queue);
     qhead_destroy(&aux_queue);
     for( int i = 0 ; i < N_OF_QUEUES ; i++ )
       qhead_destroy(proc_queues+i);
@@ -350,7 +347,7 @@
   {
     procpack * pack = (procpack *) malloc(sizeof(procpack));
     if( pack == NULL ){
-      fprintf(stderr,"Could not allocate memory.\n");
+      fatal_error("Could not allocate memory.\n");
       exit(0); //abort program
     }
     pack->process = current_proc;
@@ -368,10 +365,6 @@
       process procinfo = (process) qnode_getinfo(current_proc);
       procinfo->age = procinfo->age + 1;
     }
-    else if( signo == SIGUSR2 )
-    {
-      //IO
-    }
   }
 
   // needs to be called inside a semaphore
@@ -385,7 +378,7 @@
     #ifdef _DEBUG
     if( io_threads > processes_count ) // Crash-proof
     {
-      printf("#Threads > #Processes ! ! !\n");
+      fatal_error("ERROR: #Threads > #Processes ! ! !\n");
       exit(0);
     }
     #endif
@@ -399,7 +392,6 @@
     processes_count--;
     qnode_destroy(&dead_node);
     kill(pid,SIGKILL);
-    printf("Process %d finished.\n",pid);
     #ifdef _DEBUG
     dump_queues();
     #endif
@@ -420,13 +412,14 @@
     qnode io_proc;
     qhead new_queue;
     int my_pid;
+    char * procname;
     pack = (procpack *) info;
     io_proc = pack->process;
     process procinfo = (process) qnode_getinfo(io_proc);
+    procname = procinfo->name;
     my_pid = procinfo->pid;
     new_queue = pack->queue;
-    //free(info);
-    printf("Process %d is blocked by IO.\n",my_pid);
+    printf("Process %s is blocked by IO.\n",procname);
     sleep(IO_BLOCK_TIME); // simulating IO
     /////////////////////////////////
     // ENTERS CRITICAL REGION
@@ -437,7 +430,7 @@
     /////////////////////////////////
     qhead_ins(new_queue,io_proc);
     io_threads--;
-    printf("Process %d is no longer blocked by IO.\n",my_pid);
+    printf("Process %s is no longer blocked by IO.\n",procname);
     /////////////////////////////////
     exitCR(semId);
     /////////////////////////////////
@@ -458,8 +451,6 @@
     return (id+1)%N_OF_QUEUES;
   }
 
-  void dummy_handler(int signo) {}
-
   // needs to be inside a semaphore!!
   void dump_queues()
   {
@@ -474,7 +465,8 @@
         qnode n = qhead_rm(f);
         qhead_ins(aux,n);
         process procinfo = (process) qnode_getinfo(n);
-        printf("- %s\n",procinfo->name);
+        printf("- ");
+        dump_process(procinfo);
       }
       qhead_transfer(aux,f,QFLAG_TRANSFER_ALL);
       qhead_destroy(&aux);
@@ -485,7 +477,7 @@
   {
     int ray_sum = getRaySum(procinfo->rays,procinfo->rays_count);
     int next_io = getNextRayAge(procinfo->rays,procinfo->rays_count,procinfo->age) - procinfo->age;
-    printf("%s [%d] %d/%d, %d ut left for next I/O\n",
+    printf("%s [%d] %d/%d, %d left for next I/O\n",
             procinfo->name,
             procinfo->pid,
             procinfo->age,
@@ -530,20 +522,25 @@
       {
         char * args[QTD_ARGS];
         char temp[ARG_SIZE+1];
-        char buffer[QTD_ARGS*(ARG_SIZE+1)+1] = "";
+        char buffer[QTD_ARGS*(ARG_SIZE)+1] = "";
         for( int i = 0 ; i < qt_raj+1 ; i++ )
         {
           if( i == 0 ) strcpy(temp,USER_PROGRAM_NAME);
           else sprintf(temp,"%d",raj[i-1]);
+
           args[i] = strdup(temp);
-          strcat(buffer,args[i]);
-          strcat(buffer," ");
+
+          if( i != 0 )
+          {
+            strcat(buffer,args[i]);
+            strcat(buffer," ");
+          }
         }
         args[qt_raj+1] = NULL;
-        printf("Child process %d executing... %s\n",getpid(),buffer);
+        printf("Child process %s is executing... ( %s)\n",prog,buffer);
         if( execv(*args,args) == -1 )
         {
-          return fatal_error("Could not execute process %d.\n",getpid());
+          return fatal_error("Could not execute process %s.\n",prog);
         }
         exit(0);
       }
@@ -574,7 +571,7 @@
         sleep(1);
         processes_count++;
         #ifdef _DEBUG
-        printf("Child process %d inserted in queue #%d\n",pid,FIRST_QUEUE_ID);
+        printf("Child %s inserted in queue #%d\n",prog,FIRST_QUEUE_ID);
         #endif
       }
     } /* end parsing */
