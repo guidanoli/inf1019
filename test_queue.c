@@ -34,16 +34,18 @@
     int aux, i;
 
     // testing NULL as parameter
-    assert(qnode_create(NULL,123)==QUEUE_NULL);
+    assert(qnode_create(NULL,(void *)123)==QUEUE_NULL);
+    assert(qnode_create(&node,NULL)==QUEUE_NULL);
+    assert(qnode_create(NULL,NULL)==QUEUE_NULL);
     assert(qhead_create(NULL,456)==QUEUE_NULL);
-    assert(qnode_getid(NULL)==-1);
+    assert(qnode_getinfo(NULL)==NULL);
     assert(qhead_getid(NULL)==-1);
     qhead_ins(NULL,NULL);
     assert(qhead_rm(NULL)==NULL);
     qnode_destroy(NULL);
     qhead_destroy(NULL);
     assert(qhead_empty(NULL)==QUEUE_NULL);
-    
+
     // empty queue
     assert(qhead_create(&head,2019)==QUEUE_OK);
     assert(head!=NULL);
@@ -51,12 +53,12 @@
     assert(qhead_rm(head)==NULL);
     qhead_ins(head,NULL);
     assert(qhead_empty(head)==QUEUE_OK);
-    
+
     // one node
-    assert(qnode_create(&node,1019)==QUEUE_OK);
+    assert(qnode_create(&node,(void *)1019)==QUEUE_OK);
     assert(node!=NULL);
-    assert(qnode_getid(node)==1019);
-    
+    assert(qnode_getinfo(node)==1019);
+
     // test if won't add twice
     // queue will contain only one
     qhead_ins(head,node);
@@ -66,24 +68,24 @@
     assert(qhead_empty(head)==QUEUE_OK);
     assert(NULL==qhead_rm(head));
     assert(qhead_empty(head)==QUEUE_OK);
-    
+
     // check if destroying head destroys nodes
     // [!] wrong way of doing it
     qhead_ins(head,node);
     qhead_destroy(&head);
     assert(head==NULL);
     assert(node!=NULL); // [!] contains trash (bad)
-    
+
     // correct way of destroying queue
     assert(qhead_create(&head,10)==QUEUE_OK);
-    assert(qnode_create(&node,64)==QUEUE_OK);
+    assert(qnode_create(&node,(void *)64)==QUEUE_OK);
     qhead_ins(head,node);
     assert(qhead_rm(head)==node);
     qnode_destroy(&node);
     qhead_destroy(&head);
     assert(head==NULL);
     assert(node==NULL); // both clean!
-    
+
     // for many items...
     qhead_create(&head,32);
     aux = 0;
@@ -91,30 +93,31 @@
     {
       // [!] dangerous. loss of data about nodes
       // just from test conciseness sake
-      qnode_create(&node,i);
+      qnode_create(&node,(void *)i);
       qhead_ins(head,node);
       aux++;
     }
-    
+
     // destroy until empty
-    while(( node = qhead_rm(head) ) != NULL )
+    while( 1 )
     {
+      aux--;
+      if( (node = qhead_rm(head)) == NULL ) break;
       qnode_destroy(&node);
       assert(node==NULL);
-      aux--;
     }
     qhead_destroy(&head);
     assert(head==NULL);
     assert(aux==0); // #inserted = #removed
-    
+
     qhead_create(&head,123);
     qhead_create(&other,456);
     for( int i = 0 ; i < 10 ; i++ )
     {
-      qnode_create(&node,i);
+      qnode_create(&node,(void *)i);
       qhead_ins(head,node);
     }
-    
+
     assert(qhead_empty(head)==QUEUE_FALSE);
     assert(qhead_empty(other)==QUEUE_OK);
     assert(qhead_transfer(head,other,1)==QUEUE_OK);
@@ -126,13 +129,13 @@
     assert(qhead_transfer(other,head,QFLAG_TRANSFER_ALL)==QUEUE_OK);
     assert(qhead_empty(head)==QUEUE_FALSE);
     assert(qhead_empty(other)==QUEUE_OK);
-    
+
     qhead_destroy(&head);
     qhead_destroy(&other);
-        
+
     // show log
     show_log();
-    
+
     return 0;
   }
 
@@ -210,4 +213,3 @@
     }
     n_tests++;
   }
-

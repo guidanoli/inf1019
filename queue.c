@@ -49,7 +49,7 @@
   // Returns information or null
   void * qnode_getinfo ( qnode node )
   {
-    if( node == NULL ) return -1;
+    if( node == NULL ) return NULL;
     return node->info;
   }
 
