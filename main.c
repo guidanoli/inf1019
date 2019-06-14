@@ -32,13 +32,13 @@
 
   typedef struct process_struct * process;
 
-  typedef struct process_queue_s {
+  typedef struct procqueue_s {
     qhead queue;
     int id;
     int runs_left;
   } procqueue;
 
-  typedef struct process_package_s {
+  typedef struct procpack_s {
     qnode process;
     qhead queue;
   } procpack;
@@ -164,25 +164,19 @@
                 && quantum_timer < quantum ); // wait
         kill(pid,SIGSTOP);
 
-        #ifdef _DEBUG
-        printf("Interrupted process %s.\n",procname);
-        #endif
-
         /////////////////////////////////
         // ENTERS CRITICAL REGION
         // Manipulates current process
         /////////////////////////////////
         enterCR(semId);
         /////////////////////////////////
-
-        // new
         if( quantum_timer <= quantum )
         {
           int termination_age = getRaySum(procinfo->rays,procinfo->rays_count);
           if( procinfo->age == termination_age )
           {
             // TERMINATED
-            printf("Process %s finished.\n",procname);
+            printf("Process %s was terminated.\n",procname);
             exitHandler(pid);
           }
           else
@@ -195,7 +189,7 @@
         {
           int new_queue_id = getLowerPriorityQueueId(current_queue.id);
           #ifdef _DEBUG
-          printf("Process %s exceeded queue quantum of %d time units .\n",procname,quantum);
+          printf("Process %s was interrupted for exceeding queue quantum of %d time units .\n",procname,quantum);
           #endif
           if( new_queue_id == current_queue.id )
           {
@@ -419,7 +413,7 @@
     procname = procinfo->name;
     my_pid = procinfo->pid;
     new_queue = pack->queue;
-    printf("Process %s is blocked by IO.\n",procname);
+    printf("Process %s was blocked by IO.\n",procname);
     sleep(IO_BLOCK_TIME); // simulating IO
     /////////////////////////////////
     // ENTERS CRITICAL REGION
@@ -458,7 +452,8 @@
     {
       qhead f = proc_queues[i];
       qhead aux;
-      printf("Queue #%d: %s\n",i,(qhead_empty(f)==QUEUE_OK)?"empty":"not empty");
+      printf("Queue #%d: %s\n",i,(qhead_empty(f)==QUEUE_OK)?
+      "empty":"not empty (from first to last)");
       qhead_create(&aux,-1);
       while( qhead_empty(f) == QUEUE_FALSE )
       {
