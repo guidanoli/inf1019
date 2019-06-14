@@ -453,7 +453,9 @@
     {
       qhead f = proc_queues[i];
       qhead aux;
-      printf("Queue #%d: %s\n",i,(qhead_empty(f)==QUEUE_OK)?
+      int isEmpty = qhead_empty(f)==QUEUE_OK;
+      if( i == current_queue.id ) isEmpty &= qhead_empty(aux_queue)==QUEUE_OK;
+      printf("Queue #%d: %s\n",i,isEmpty?
       "empty":"not empty (from first to last)");
       qhead_create(&aux,-1);
       while( qhead_empty(f) == QUEUE_FALSE )
@@ -465,6 +467,18 @@
         dump_process(procinfo);
       }
       qhead_transfer(aux,f,QFLAG_TRANSFER_ALL);
+      if( i == current_queue.id )
+      {
+        while( qhead_empty(aux_queue) == QUEUE_FALSE )
+        {
+          qnode n = qhead_rm(aux_queue);
+          qhead_ins(aux,n);
+          process procinfo = (process) qnode_getinfo(n);
+          printf("* ");
+          dump_process(procinfo);
+        }
+        qhead_transfer(aux,aux_queue,QFLAG_TRANSFER_ALL);
+      }
       qhead_destroy(&aux);
     }
   }
