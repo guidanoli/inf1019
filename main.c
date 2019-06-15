@@ -43,45 +43,51 @@
     qhead queue;
   } procpack;
 
-  // processes and queues
+  // global variables
   qhead proc_queues[N_OF_QUEUES];
   qhead aux_queue = NULL;
   qnode current_proc;
   procqueue current_queue;
+
   int processes_count = 0;
   int io_threads = 0;
   int quantum_timer = 0;
-
-  // semaphore and queues
   int semId = 0;
 
   // functions
   int fatal_error(const char * err_msg_format, ...);
+  int power_of_two(int exp);
+
   int create_queues(void);
-  int init_interpreter();
   void destroy_queues(void);
-  int myPow2(int exp);
-  int getQueueRuns(int id);
-  int getQueueQuantum(int id);
-  int getHigherPriorityQueueId(int id);
-  int getLowerPriorityQueueId(int id);
-  qhead getQueueFromId(int id);
-  qhead getUpdatedQueue();
-  void setCurrentQueue(int id);
-  void forceNextQueue();
-  void ioHandler(int pid, int stay_on_queue);
-  void signalHandler(int signo);
-  void * ioThreadFunction(void * info);
-  procpack * getCurrentProcessPackage(int stay_on_queue);
   void dump_queues();
-  int getRaySum(int * rays, int rays_count);
-  int getNextRayAge(int * rays, int rays_count, int age);
   void dump_process(process procinfo);
+
+  int init_interpreter();
+
+  int get_queue_runs(int id);
+  int get_queue_quantum(int id);
+  int get_higher_priority_queue_id(int id);
+  int get_lower_priority_queue_id(int id);
+  qhead get_queue_from_id(int id);
+  qhead get_updated_queue();
+  void set_current_queue(int id);
+  void force_next_queue();
+
+  void signal_handler(int signo);
+
+  void io_handler(int pid, int stay_on_queue);
+  void * io_thread_handler(void * info);
+  procpack * pack_current_process(int stay_on_queue);
+
+  int get_ray_sum(int * rays, int rays_count);
+  int get_next_ray_age(int * rays, int rays_count, int age);
 
   int main(int argc, char ** argv)
   {
     int ret = 0, quantum = 0;
     qhead queue;
+    int queue_id;
     pid_t pid;
 
     /* create queues */
@@ -95,10 +101,10 @@
     if((ret=init_interpreter())!=0) return ret;
 
     /* initialize scheduler signal handlers */
-    signal(SIGUSR1,signalHandler);
+    signal(SIGUSR1,signal_handler);
 
     /* start from queue of highest priority */
-    setCurrentQueue(FIRST_QUEUE_ID);
+    set_current_queue(FIRST_QUEUE_ID);
 
     #ifdef _DEBUG
     printf("======= SCHEDULING %d PROCESS%s...\n",processes_count,processes_count==1?"":"ES");
@@ -111,8 +117,8 @@
 
       if( processes_count != io_threads )
       {
-        queue = getUpdatedQueue();
-        quantum = getQueueQuantum(current_queue.id);
+        queue = get_updated_queue();
+        quantum = get_queue_quantum(current_queue.id);
         #ifdef _DEBUG
         if( qhead_empty(queue) == QUEUE_FALSE )
           printf("The scheduler is dealing with queue #%d.\n",current_queue.id);
@@ -154,7 +160,7 @@
         #endif
 
         kill(pid,SIGCONT);
-        int ray_end = getNextRayAge(procinfo->rays, procinfo->rays_count, procinfo->age);
+        int ray_end = get_next_ray_age(procinfo->rays, procinfo->rays_count, procinfo->age);
         while(  procinfo->age < ray_end && quantum_timer < quantum ); // wait
         kill(pid,SIGSTOP);
 
@@ -166,7 +172,7 @@
         /////////////////////////////////
         if( procinfo->age == ray_end )
         {
-          int termination_age = getRaySum(procinfo->rays,procinfo->rays_count);
+          int termination_age = get_ray_sum(procinfo->rays,procinfo->rays_count);
           if( procinfo->age == termination_age )
           {
             printf("Process %s was terminated.\n",procname);
@@ -178,15 +184,15 @@
             printf("Process %s was blocked by I/O\n",procname);
             if(stay_on_queue)
             {
-              printf("...and will remain on queue #%d (for queue quantum coinciding with I/O)",current_queue.id)
+              printf("...and will remain on queue #%d (for queue quantum coinciding with I/O)\n",current_queue.id);
             }
-            ioHandler(pid, stay_on_queue); // I/O
+            io_handler(pid, stay_on_queue); // I/O
           }
         }
         else
         {
           // CPU
-          int new_queue_id = getLowerPriorityQueueId(current_queue.id);
+          int new_queue_id = get_lower_priority_queue_id(current_queue.id);
           #ifdef _DEBUG
           printf("Process %s was interrupted for exceeding queue quantum of %d time units .\n",procname,quantum);
           #endif
@@ -199,7 +205,7 @@
           }
           else
           {
-            qhead_ins(getQueueFromId(new_queue_id),current_proc);
+            qhead_ins(get_queue_from_id(new_queue_id),current_proc);
             #ifdef _DEBUG
             printf("Process %s will migrate from queue #%d to queue #%d\n",
             procname, current_queue.id, new_queue_id);
@@ -274,46 +280,46 @@
       qhead_destroy(proc_queues+i);
   }
 
-  qhead getQueueFromId(int id)
+  qhead get_queue_from_id(int id)
   {
     return proc_queues[id%N_OF_QUEUES];
   }
 
-  int getRaySum(int * rays, int rays_count)
+  int get_ray_sum(int * rays, int rays_count)
   {
     int sum = 0;
     for(int i = 0; i < rays_count; i++) sum += rays[i];
     return sum;
   }
 
-  int getNextRayAge(int * rays, int rays_count, int age)
+  int get_next_ray_age(int * rays, int rays_count, int age)
   {
     int sum = 0;
-    if( age >= getRaySum(rays,rays_count) ) return age;
+    if( age >= get_ray_sum(rays,rays_count) ) return age;
     for(int i = 0; i < rays_count && sum <= age; i++) sum += rays[i];
     return sum;
   }
 
-  qhead getUpdatedQueue()
+  qhead get_updated_queue()
   {
     if( current_queue.runs_left == 0 )
     {
       #ifdef _DEBUG
       if( processes_count != io_threads && qhead_empty(current_queue.queue) == QUEUE_FALSE )
-        printf("Queue #%d has reached its limit of %d cycles.\n",current_queue.id,getQueueRuns(current_queue.id));
+        printf("Queue #%d has reached its limit of %d cycles.\n",current_queue.id,get_queue_runs(current_queue.id));
       #endif
-      forceNextQueue();
+      force_next_queue();
     }
     current_queue.runs_left--; // already wastes by calling
-    return getQueueFromId(current_queue.id);
+    return get_queue_from_id(current_queue.id);
   }
 
-  void forceNextQueue()
+  void force_next_queue()
   {
-    setCurrentQueue((current_queue.id+1)%N_OF_QUEUES);
+    set_current_queue((current_queue.id+1)%N_OF_QUEUES);
   }
 
-  void setCurrentQueue(int id)
+  void set_current_queue(int id)
   {
     /////////////////////////////////
     // ENTERS CRITICAL REGION
@@ -322,7 +328,8 @@
     enterCR(semId);
     /////////////////////////////////
     current_queue.id = id;
-    current_queue.runs_left = getQueueRuns(id);
+    current_queue.queue = get_queue_from_id(id);
+    current_queue.runs_left = get_queue_runs(id);
     /////////////////////////////////
     exitCR(semId);
     /////////////////////////////////
@@ -330,14 +337,14 @@
     /////////////////////////////////
   }
 
-  int myPow2(int exp) { return 1<<exp; }
+  int power_of_two(int exp) { return 1<<exp; }
 
-  int getQueueRuns(int id) { return myPow2(N_OF_QUEUES-id-1); }
+  int get_queue_runs(int id) { return power_of_two(N_OF_QUEUES-id-1); }
 
-  int getQueueQuantum(int id) { return myPow2(id)*SMALLEST_QUANTUM; }
+  int get_queue_quantum(int id) { return power_of_two(id)*SMALLEST_QUANTUM; }
 
   // needs to be called inside a semaphore
-  procpack * getCurrentProcessPackage(int stay_on_queue)
+  procpack * pack_current_process(int stay_on_queue)
   {
     int new_queue_id;
     procpack * pack = (procpack *) malloc(sizeof(procpack));
@@ -347,13 +354,13 @@
     }
     pack->process = current_proc;
     if(stay_on_queue) new_queue_id = current_queue.id;
-    else new_queue_id = getHigherPriorityQueueId(current_queue.id);
-    pack->queue = getQueueFromId(new_queue_id);
+    else new_queue_id = get_higher_priority_queue_id(current_queue.id);
+    pack->queue = get_queue_from_id(new_queue_id);
     return pack;
   }
 
   // Adds signal to signal queue
-  void signalHandler(int signo)
+  void signal_handler(int signo)
   {
     if( signo == SIGUSR1 )
     {
@@ -364,12 +371,12 @@
   }
 
   // needs to be called inside a semaphore
-  void ioHandler(int pid, int stay_on_queue)
+  void io_handler(int pid, int stay_on_queue)
   {
     void * info;
     pthread_t thread;
-    info = (void *) getCurrentProcessPackage(stay_on_queue); // inside semaphore
-    pthread_create(&thread,NULL,ioThreadFunction,info);
+    info = (void *) pack_current_process(stay_on_queue); // inside semaphore
+    pthread_create(&thread,NULL,io_thread_handler,info);
     io_threads++;
     #ifdef _DEBUG
     if( io_threads > processes_count ) // Crash-proof
@@ -390,7 +397,7 @@
     kill(pid,SIGKILL);
   }
 
-  void * ioThreadFunction(void * info)
+  void * io_thread_handler(void * info)
   {
     procpack * pack;
     qnode io_proc;
@@ -423,13 +430,13 @@
     pthread_exit(NULL); // end thread
   }
 
-  int getHigherPriorityQueueId(int id)
+  int get_higher_priority_queue_id(int id)
   {
     if(id <= 0) return 0;
     return (id-1)%N_OF_QUEUES;
   }
 
-  int getLowerPriorityQueueId(int id)
+  int get_lower_priority_queue_id(int id)
   {
     if(id >= N_OF_QUEUES-1) return N_OF_QUEUES-1;
     return (id+1)%N_OF_QUEUES;
@@ -484,8 +491,8 @@
 
   void dump_process(process procinfo)
   {
-    int ray_sum = getRaySum(procinfo->rays,procinfo->rays_count);
-    int next_io = getNextRayAge(procinfo->rays,procinfo->rays_count,procinfo->age) - procinfo->age;
+    int ray_sum = get_ray_sum(procinfo->rays,procinfo->rays_count);
+    int next_io = get_next_ray_age(procinfo->rays,procinfo->rays_count,procinfo->age) - procinfo->age;
     printf("%s [%d] %d/%d, %d left for next I/O\n",
             procinfo->name,
             procinfo->pid,
