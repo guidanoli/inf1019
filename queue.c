@@ -27,10 +27,6 @@
   // QUEUE NODE FUNCTIONS
   ///////////////////////////////////////////
 
-  // Create node
-  // info is the node's information
-  // Returns pointer to node in *pnode
-  // Returns OK, NULL or MEM
   queue_ret qnode_create ( qnode * pnode , void * info )
   {
     qnode node;
@@ -44,18 +40,12 @@
     return QUEUE_OK;
   }
 
-  // Get node information
-  // node is pointer to node
-  // Returns information or null
   void * qnode_getinfo ( qnode node )
   {
     if( node == NULL ) return NULL;
     return node->info;
   }
 
-  // Destroy node
-  // node is pointer to pointer to node
-  // Does not free information pointed by node
   void qnode_destroy ( qnode * node )
   {
     if( node && *node )
@@ -69,10 +59,6 @@
   // QUEUE HEAD FUNCTIONS
   ////////////////////////////////////////////////
 
-  // Create head
-  // id is the head's identification
-  // Returns pointer to head or NULL (mem) in *phead
-  // Returns OK, NULL or MEM
   queue_ret qhead_create ( qhead * phead , int id )
   {
     qhead head;
@@ -85,32 +71,22 @@
     return QUEUE_OK;
   }
 
-  // Check if head is empty (no nodes)
-  // head is pointer to head
-  // [!] Don't use 1 or 0, use the ret values!!!
-  // Returns QUEUE_OK, QUEUE_FALSE or NULL
   queue_ret qhead_empty ( qhead head )
   {
     if( head == NULL ) return QUEUE_NULL;
     return head->ini == NULL ? QUEUE_OK : QUEUE_FALSE;
   }
 
-  // Get head id
-  // head is pointer to head
-  // Returns id or -1 if null
   int qhead_getid ( qhead head )
   {
     if( head == NULL ) return -1;
     return head->id;
   }
 
-  // Insert node (at the end)
-  // head is pointer to head
-  // node is pointer do node to be inserted
-  void qhead_ins ( qhead head , qnode node )
+  queue_ret qhead_ins ( qhead head , qnode node )
   {
-    if( head == NULL || node == NULL ) return;
-    if( qhead_has_node(head,node) ) return;
+    if( head == NULL || node == NULL ) return QUEUE_NULL;
+    if( qhead_has_node(head,node) ) return QUEUE_DUPLICATE;
     if( head->ini == NULL )
     {
       head->ini = node;
@@ -121,12 +97,9 @@
       head->end->next = node;
       head->end = node;
     }
+    return QUEUE_OK;
   }
 
-  // Remove node (from the beggining)
-  // head is pointer to head
-  // Returns  node if successful or
-  //          NULL if head is NULL or queue is empty
   qnode qhead_rm ( qhead head )
   {
     qnode node;
@@ -139,14 +112,6 @@
     return node;
   }
 
-  // Transfers qtd nodes from src to dest
-  // src is pointer to source queue
-  // dest is pointer to destintation queue
-  // qtd is the quantity of nodes to be transfered
-  // Returns QUEUE_OK, QUEUE_NULL
-  // if qtd == QFLAG_TRANSFER_ALL (-1), src will be emptied and
-  // all its nodes will be inserted in dest
-  // if qtd < -1, nothing will be done, and QUEUE_PARAM will be returned
   queue_ret qhead_transfer( qhead src , qhead dest , int qtd )
   {
     if( src == NULL || dest == NULL ) return QUEUE_NULL;
@@ -156,8 +121,6 @@
     return QUEUE_OK;
   }
 
-  // Destroy head and its nodes
-  // head is pointer to pointer to head
   void qhead_destroy ( qhead * head )
   {
     if ( head == NULL || *head == NULL ) return;
@@ -172,7 +135,15 @@
     *head=NULL;
   }
 
-  // assumes both not null
+  ///////////////////////////////////////////
+  // PRIVATE FUNCTIONS' IMPLEMENTATION
+  ///////////////////////////////////////////
+
+  // Checks if queue has node or not
+  // head - queue head
+  // node - queue node searched
+  // >  0 - no
+  //    1 - yes
   static int qhead_has_node ( qhead head, qnode node )
   {
     for( qnode q = head->ini; q != NULL ; q = q->next ) if( q == node ) return 1;

@@ -111,8 +111,8 @@
     if((ret=create_queues())!=0) return ret;
 
     /* initialize semaphore */
-    if((semId = semCreate(SEM_KEY))==-1) return EXIT_FAILURE;
-    if(semInit(semId)==-1) return EXIT_FAILURE;
+    if((semId = sem_create(SEM_KEY))==-1) return EXIT_FAILURE;
+    if(sem_init(semId)==-1) return EXIT_FAILURE;
 
     /* parse args from stdin and build queues */
     if((ret=init_interpreter())!=0) return ret;
@@ -153,7 +153,7 @@
         // Manipulates current process
         // and current queue
         /////////////////////////////////
-        enterCR(semId);
+        sem_enter_cr(semId);
         /////////////////////////////////
         if( qhead_empty(queue) == QUEUE_FALSE )
         {
@@ -163,7 +163,7 @@
           flag = 1;
         }
         /////////////////////////////////
-        exitCR(semId);
+        sem_exit_cr(semId);
         /////////////////////////////////
         // EXITS CRITICAL REGION
         /////////////////////////////////
@@ -185,7 +185,7 @@
         // ENTERS CRITICAL REGION
         // Manipulates current process
         /////////////////////////////////
-        enterCR(semId);
+        sem_enter_cr(semId);
         /////////////////////////////////
         if( procinfo->age == ray_end )
         {
@@ -215,14 +215,24 @@
           #endif
           if( new_queue_id == current_queue.id )
           {
-            qhead_ins(aux_queue,current_proc);
+            if( qhead_ins(aux_queue,current_proc) != QUEUE_OK )
+            {
+              fatal_error("Could not insert process %s in auxiliary queue.\n",
+              procname);
+              exit(0);
+            }
             #ifdef _DEBUG
             printf("Process %s will remain in queue #%d.\n", procname,new_queue_id);
             #endif
           }
           else
           {
-            qhead_ins(get_queue_from_id(new_queue_id),current_proc);
+            if( qhead_ins(get_queue_from_id(new_queue_id),current_proc) != QUEUE_OK )
+            {
+              fatal_error("Could not insert process %s in queue #%d.\n",
+              procname, new_queue_id);
+              exit(0);
+            }
             #ifdef _DEBUG
             printf("Process %s will migrate from queue #%d to queue #%d\n",
             procname, current_queue.id, new_queue_id);
@@ -231,7 +241,7 @@
         }
         dump_queues();
         /////////////////////////////////
-        exitCR(semId);
+        sem_exit_cr(semId);
         /////////////////////////////////
         // EXITS CRITICAL REGION
         /////////////////////////////////
@@ -240,12 +250,12 @@
       // ENTERS CRITICAL REGION
       // Manipulates auxiliary queue
       /////////////////////////////////
-      enterCR(semId);
+      sem_enter_cr(semId);
       /////////////////////////////////
       if( qhead_transfer(aux_queue,queue,QFLAG_TRANSFER_ALL) != QUEUE_OK )
         return fatal_error("An error occurred while managing auxiliary queue\n");
       /////////////////////////////////
-      exitCR(semId);
+      sem_exit_cr(semId);
       /////////////////////////////////
       // EXITS CRITICAL REGION
       /////////////////////////////////
@@ -256,7 +266,7 @@
     #endif
 
     /* safely destroying semaphore */
-    semDestroy(semId);
+    sem_destroy(semId);
 
     /* safely freeing queues */
     destroy_queues();
@@ -268,7 +278,7 @@
   /*****************************/
   /* Functions' implementation */
   /*****************************/
-  
+
   // Indicates an error through stderr output
   // err_msg_format - format, just like in printf
   // ... - arguments, just like in printf
@@ -293,10 +303,10 @@
   // > EXIT_SUCCESS, EXIT_FAILURE
   int create_queues(void)
   {
-    if( qhead_create(&aux_queue,-2) != 0 )
+    if( qhead_create(&aux_queue,-2) != QUEUE_OK )
       return fatal_error("Could not create auxiliary queue.\n");
     for( int i = 0 ; i < N_OF_QUEUES ; i++ )
-      if( qhead_create(proc_queues+i,i) != 0 )
+      if( qhead_create(proc_queues+i,i) != QUEUE_OK )
         return fatal_error("Could not create queue #%d.\n",i);
     return EXIT_SUCCESS;
   }
@@ -361,11 +371,11 @@
   // [!] invokes semaphore
   void set_current_queue(int id)
   {
-    enterCR(semId);
+    sem_enter_cr(semId);
     current_queue.id = id;
     current_queue.queue = get_queue_from_id(id);
     current_queue.runs_left = get_queue_runs(id);
-    exitCR(semId);
+    sem_exit_cr(semId);
   }
 
   // Get queue maximum number of runs from ID
@@ -459,12 +469,24 @@
     my_pid = procinfo->pid;
     new_queue = pack->queue;
     sleep(IO_BLOCK_TIME); // simulating I/O
-    enterCR(semId);
-    qhead_ins(new_queue,io_proc);
+    sem_enter_cr(semId);
+    if( qhead_getid(new_queue) == current_queue.id )
+    {
+      new_queue = aux_queue;
+    }
+    if( qhead_ins(new_queue,io_proc) != QUEUE_OK )
+    {
+      if( new_queue == aux_queue )
+        fatal_error("Could not insert process %s in auxiliary queue.\n",
+        procname);
+      else
+        fatal_error("Could not insert process %s in queue #%d.\n",
+        procname, qhead_getid(new_queue));
+    }
     io_threads--;
-    printf("Process %s is no longer blocked by I/O and was inserted in queue #%d.\n"
-    ,procname,qhead_getid(new_queue));
-    exitCR(semId);
+    printf("Process %s is no longer blocked by I/O and was inserted in queue #%d.\n",
+    procname, qhead_getid(new_queue));
+    sem_exit_cr(semId);
     pthread_exit(NULL); // end thread
   }
 
@@ -495,34 +517,43 @@
     for(int i = 0 ; i < N_OF_QUEUES ; i++ )
     {
       qhead f = proc_queues[i];
-      qhead aux;
-      int isEmpty = qhead_empty(f)==QUEUE_OK;
+      qhead dump_queue;
+      int isEmpty = qhead_empty(f) == QUEUE_OK;
       if( i == current_queue.id ) isEmpty &= qhead_empty(aux_queue)==QUEUE_OK;
       printf("Queue #%d: %s\n",i,isEmpty?
       "empty":"not empty (from first to last)");
-      qhead_create(&aux,-2);
-      while( qhead_empty(f) == QUEUE_FALSE )
+      qhead_create(&dump_queue,-2);
+      qnode node;
+      while( (node = qhead_rm(f)) != NULL )
       {
-        qnode n = qhead_rm(f);
-        qhead_ins(aux,n);
-        process procinfo = (process) qnode_getinfo(n);
+        process procinfo = (process) qnode_getinfo(node);
+        if( qhead_ins(dump_queue,node) != QUEUE_OK )
+        {
+          fatal_error("Could not insert process %s in dumping queue.\n",
+          procinfo->name);
+          exit(0);
+        }
         printf("- ");
         dump_process(procinfo);
       }
-      qhead_transfer(aux,f,QFLAG_TRANSFER_ALL);
+      qhead_transfer(dump_queue,f,QFLAG_TRANSFER_ALL);
       if( i == current_queue.id )
       {
-        while( qhead_empty(aux_queue) == QUEUE_FALSE )
+        while( (node = qhead_rm(aux_queue)) != NULL )
         {
-          qnode n = qhead_rm(aux_queue);
-          qhead_ins(aux,n);
-          process procinfo = (process) qnode_getinfo(n);
+          process procinfo = (process) qnode_getinfo(node);
+          if( qhead_ins(dump_queue,node) != QUEUE_OK )
+          {
+            fatal_error("Could not insert process %s in dumping queue.\n",
+            procinfo->name);
+            exit(0);
+          }
           printf("* ");
           dump_process(procinfo);
         }
-        qhead_transfer(aux,aux_queue,QFLAG_TRANSFER_ALL);
+        qhead_transfer(dump_queue,aux_queue,QFLAG_TRANSFER_ALL);
       }
-      qhead_destroy(&aux);
+      qhead_destroy(&dump_queue);
     }
     if( processes_count > 0 )
     {
@@ -631,15 +662,18 @@
           process_info->rays[i] = raj[i];
         }
         dump_process(process_info);
-        if( qnode_create(&process_node,process_info) != 0 )
+        if( qnode_create(&process_node,process_info) != QUEUE_OK )
         {
-          return fatal_error("Could not allocate memmory.\n");
+          return fatal_error("Could not allocate memory.\n");
         }
-        qhead_ins(proc_queues[FIRST_QUEUE_ID],process_node);
-        sleep(1);
+        if( qhead_ins(proc_queues[FIRST_QUEUE_ID],process_node) != QUEUE_OK )
+        {
+          return fatal_error("Could not insert process %s in queue #%d.\n",
+          prog, FIRST_QUEUE_ID);
+        }
         processes_count++;
         #ifdef _DEBUG
-        printf("Child %s inserted in queue #%d\n",prog,FIRST_QUEUE_ID);
+        printf("Child %s inserted in queue #%d\n", prog, FIRST_QUEUE_ID);
         #endif
       }
     } /* end parsing */
