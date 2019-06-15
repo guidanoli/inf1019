@@ -22,6 +22,10 @@
   #define SEM_KEY 123456789
   #define USER_PROGRAM_NAME "prog"
 
+  /*******************/
+  /* data structures */
+  /*******************/
+
   struct process_struct {
     char * name;
     int * rays;
@@ -43,7 +47,10 @@
     qhead queue;
   } procpack;
 
-  // global variables
+  /********************/
+  /* global variables */
+  /********************/
+
   qhead proc_queues[N_OF_QUEUES];
   qhead aux_queue = NULL;
   qnode current_proc;
@@ -54,34 +61,44 @@
   int quantum_timer = 0;
   int semId = 0;
 
-  // functions
+  /*************/
+  /* functions */
+  /*************/
+
+  // utilities
+  void dump_process(process procinfo);
+  void dump_queues();
   int fatal_error(const char * err_msg_format, ...);
+  procpack * pack_current_process(int stay_on_queue);
   int power_of_two(int exp);
 
+  // macro functions
   int create_queues(void);
   void destroy_queues(void);
-  void dump_queues();
-  void dump_process(process procinfo);
-
   int init_interpreter();
 
-  int get_queue_runs(int id);
-  int get_queue_quantum(int id);
+  // specific queues management
   int get_higher_priority_queue_id(int id);
   int get_lower_priority_queue_id(int id);
+  int get_queue_runs(int id);
+  int get_queue_quantum(int id);
   qhead get_queue_from_id(int id);
   qhead get_updated_queue();
   void set_current_queue(int id);
-  void force_next_queue();
 
-  void signal_handler(int signo);
-
+  // handler functions
+  void exit_handler(int pid);
   void io_handler(int pid, int stay_on_queue);
   void * io_thread_handler(void * info);
-  procpack * pack_current_process(int stay_on_queue);
+  void signal_handler(int signo);
 
-  int get_ray_sum(int * rays, int rays_count);
+  // process rays
   int get_next_ray_age(int * rays, int rays_count, int age);
+  int get_ray_sum(int * rays, int rays_count);
+
+  /********/
+  /* main */
+  /********/
 
   int main(int argc, char ** argv)
   {
@@ -176,7 +193,7 @@
           if( procinfo->age == termination_age )
           {
             printf("Process %s was terminated.\n",procname);
-            exitHandler(pid); // TERMINATED
+            exit_handler(pid); // TERMINATED
           }
           else
           {
@@ -248,10 +265,14 @@
 	  return EXIT_SUCCESS;
   }
 
-  ///////////////////////////////
-  // Functions' implementation //
-  ///////////////////////////////
-
+  /*****************************/
+  /* Functions' implementation */
+  /*****************************/
+  
+  // Indicates an error through stderr output
+  // err_msg_format - format, just like in printf
+  // ... - arguments, just like in printf
+  // > EXIT_FAILURE
   int fatal_error(const char * err_msg_format, ...)
   {
     va_list vl;
@@ -263,6 +284,13 @@
     return EXIT_FAILURE;
   }
 
+  // Optimized binary exponentiation (base 2)
+  // exp - exponent
+  // > 2^(exp)
+  int power_of_two(int exp) { return 1<<exp; }
+
+  // Creates process queues (+ auxiliary)
+  // > EXIT_SUCCESS, EXIT_FAILURE
   int create_queues(void)
   {
     if( qhead_create(&aux_queue,-2) != 0 )
@@ -270,9 +298,10 @@
     for( int i = 0 ; i < N_OF_QUEUES ; i++ )
       if( qhead_create(proc_queues+i,i) != 0 )
         return fatal_error("Could not create queue #%d.\n",i);
-    return 0;
+    return EXIT_SUCCESS;
   }
 
+  // Destroys process queues (+ auxiliary)
   void destroy_queues(void)
   {
     qhead_destroy(&aux_queue);
@@ -280,11 +309,17 @@
       qhead_destroy(proc_queues+i);
   }
 
+  // Get queue from ID
+  // id - queue ID
+  // > queue head
   qhead get_queue_from_id(int id)
   {
     return proc_queues[id%N_OF_QUEUES];
   }
 
+  // Sums all process rays
+  // rays - array of ray durations
+  // > sum of rays
   int get_ray_sum(int * rays, int rays_count)
   {
     int sum = 0;
@@ -292,6 +327,11 @@
     return sum;
   }
 
+  // Gets nearest age when process will enter I/O
+  // rays - array of ray durations
+  // rays_count - size of rays array
+  // age - process' current age
+  // > nearest age
   int get_next_ray_age(int * rays, int rays_count, int age)
   {
     int sum = 0;
@@ -300,6 +340,8 @@
     return sum;
   }
 
+  // Updates queue
+  // > new queue
   qhead get_updated_queue()
   {
     if( current_queue.runs_left == 0 )
@@ -308,42 +350,39 @@
       if( processes_count != io_threads && qhead_empty(current_queue.queue) == QUEUE_FALSE )
         printf("Queue #%d has reached its limit of %d cycles.\n",current_queue.id,get_queue_runs(current_queue.id));
       #endif
-      force_next_queue();
+      set_current_queue((current_queue.id+1)%N_OF_QUEUES); // forces next queue
     }
     current_queue.runs_left--; // already wastes by calling
     return get_queue_from_id(current_queue.id);
   }
 
-  void force_next_queue()
-  {
-    set_current_queue((current_queue.id+1)%N_OF_QUEUES);
-  }
-
+  // Sets current queue from ID
+  // id - queue ID
+  // [!] invokes semaphore
   void set_current_queue(int id)
   {
-    /////////////////////////////////
-    // ENTERS CRITICAL REGION
-    // Manipulates current queue
-    /////////////////////////////////
     enterCR(semId);
-    /////////////////////////////////
     current_queue.id = id;
     current_queue.queue = get_queue_from_id(id);
     current_queue.runs_left = get_queue_runs(id);
-    /////////////////////////////////
     exitCR(semId);
-    /////////////////////////////////
-    // EXITS CRITICAL REGION
-    /////////////////////////////////
   }
 
-  int power_of_two(int exp) { return 1<<exp; }
-
+  // Get queue maximum number of runs from ID
+  // id - queue ID
+  // > 2^(N-id-1), being N the number of queues
   int get_queue_runs(int id) { return power_of_two(N_OF_QUEUES-id-1); }
 
+  // Get queue quantum from ID
+  // id - queue ID
+  // > q*2^(id), being q the smallest quantum
   int get_queue_quantum(int id) { return power_of_two(id)*SMALLEST_QUANTUM; }
 
-  // needs to be called inside a semaphore
+  // Packs current process into a data structure
+  // stay_on_queue -  0 = migrates to higher priority queue
+  //                  1 = stays on current queue
+  // > proccess package
+  // [!] needs to be called inside a semaphore
   procpack * pack_current_process(int stay_on_queue)
   {
     int new_queue_id;
@@ -359,7 +398,8 @@
     return pack;
   }
 
-  // Adds signal to signal queue
+  // Handles IPC signals
+  // signo - singal identification
   void signal_handler(int signo)
   {
     if( signo == SIGUSR1 )
@@ -370,25 +410,10 @@
     }
   }
 
-  // needs to be called inside a semaphore
-  void io_handler(int pid, int stay_on_queue)
-  {
-    void * info;
-    pthread_t thread;
-    info = (void *) pack_current_process(stay_on_queue); // inside semaphore
-    pthread_create(&thread,NULL,io_thread_handler,info);
-    io_threads++;
-    #ifdef _DEBUG
-    if( io_threads > processes_count ) // Crash-proof
-    {
-      fatal_error("ERROR: #Threads > #Processes ! ! !\n");
-      exit(0);
-    }
-    #endif
-  }
-
-  // needs to be called inside a semaphore
-  void exitHandler(int pid)
+  // Destroys current process node and terminates it
+  // pid - current process ID
+  // [!] needs to be called inside a semaphore
+  void exit_handler(int pid)
   {
     qnode dead_node;
     dead_node = current_proc;
@@ -397,6 +422,29 @@
     kill(pid,SIGKILL);
   }
 
+  // Blocks the current process, assigning it to a thread
+  // The thread will be handled by the io_thread_handler function
+  // pid - current process ID
+  // stay_on_queue -  0 = migrates to higher priority queue
+  //                  1 = stays on current queue
+  // [!] needs to be called inside a semaphore
+  void io_handler(int pid, int stay_on_queue)
+  {
+    void * info;
+    pthread_t thread;
+    info = (void *) pack_current_process(stay_on_queue); // inside semaphore
+    pthread_create(&thread,NULL,io_thread_handler,info);
+    io_threads++;
+    if( io_threads > processes_count ) // Crash-proof
+    {
+      fatal_error("ERROR: #Threads > #Processes ! ! !\n");
+      exit(0);
+    }
+  }
+
+  // Sleeps for IO_BLOCK_TIME seconds and then inserts on the
+  // queue assigned by the process package
+  // [!] invokes semaphore
   void * io_thread_handler(void * info)
   {
     procpack * pack;
@@ -411,38 +459,37 @@
     my_pid = procinfo->pid;
     new_queue = pack->queue;
     sleep(IO_BLOCK_TIME); // simulating I/O
-    /////////////////////////////////
-    // ENTERS CRITICAL REGION
-    // Manipulates io_process and
-    // any of the process queues
-    /////////////////////////////////
     enterCR(semId);
-    /////////////////////////////////
     qhead_ins(new_queue,io_proc);
     io_threads--;
     printf("Process %s is no longer blocked by I/O and was inserted in queue #%d.\n"
     ,procname,qhead_getid(new_queue));
-    /////////////////////////////////
     exitCR(semId);
-    /////////////////////////////////
-    // EXITS CRITICAL REGION
-    /////////////////////////////////
     pthread_exit(NULL); // end thread
   }
 
+  // Gets queue with slightly higher priority
+  // id - queue ID
+  // > queue with higher priority
   int get_higher_priority_queue_id(int id)
   {
     if(id <= 0) return 0;
     return (id-1)%N_OF_QUEUES;
   }
 
+  // Gets queue with slightly lower priority
+  // id - queue ID
+  // > queue with lower priority
   int get_lower_priority_queue_id(int id)
   {
     if(id >= N_OF_QUEUES-1) return N_OF_QUEUES-1;
     return (id+1)%N_OF_QUEUES;
   }
 
-  // needs to be inside a semaphore!!
+  // Dumps queues to stdout output, calling dump_process for each
+  // process it finds in queue. Also dumps the number of processes
+  // in total, in I/O and in queues.
+  // [!] needs to be inside a semaphore!!
   void dump_queues()
   {
     for(int i = 0 ; i < N_OF_QUEUES ; i++ )
@@ -489,6 +536,8 @@
       printf("No remaining processes\n");
   }
 
+  // Dumps process information to stdout
+  // procinfo - process information
   void dump_process(process procinfo)
   {
     int ray_sum = get_ray_sum(procinfo->rays,procinfo->rays_count);
@@ -501,6 +550,10 @@
             next_io);
   }
 
+  // Initializes interpreter that will read from stdin the
+  // set of commands to create the processes that will go
+  // to the queue of id equal to FIRST_QUEUE_ID
+  // > EXIT_SUCCESS, EXIT_FAILURE
   int init_interpreter()
   {
     char c;
@@ -580,8 +633,7 @@
         dump_process(process_info);
         if( qnode_create(&process_node,process_info) != 0 )
         {
-          fprintf(stderr,"Could not allocate memmory.\n");
-          return EXIT_FAILURE;
+          return fatal_error("Could not allocate memmory.\n");
         }
         qhead_ins(proc_queues[FIRST_QUEUE_ID],process_node);
         sleep(1);
