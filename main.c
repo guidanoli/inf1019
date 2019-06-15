@@ -69,10 +69,10 @@
   qhead getUpdatedQueue();
   void setCurrentQueue(int id);
   void forceNextQueue();
-  void ioHandler(int pid);
+  void ioHandler(int pid, int stay_on_queue);
   void signalHandler(int signo);
   void * ioThreadFunction(void * info);
-  procpack * getCurrentProcessPackage();
+  procpack * getCurrentProcessPackage(int stay_on_queue);
   void dump_queues();
   int getRaySum(int * rays, int rays_count);
   int getNextRayAge(int * rays, int rays_count, int age);
@@ -174,8 +174,13 @@
           }
           else
           {
-            printf("Process %s was blocked by IO.\n",procname);
-            ioHandler(pid); // IO
+            int stay_on_queue = quantum_timer == quantum;
+            printf("Process %s was blocked by I/O\n",procname);
+            if(stay_on_queue)
+            {
+              printf("...and will remain on queue #%d (for queue quantum coinciding with I/O)",current_queue.id)
+            }
+            ioHandler(pid, stay_on_queue); // I/O
           }
         }
         else
@@ -254,7 +259,7 @@
 
   int create_queues(void)
   {
-    if( qhead_create(&aux_queue,-1) != 0 )
+    if( qhead_create(&aux_queue,-2) != 0 )
       return fatal_error("Could not create auxiliary queue.\n");
     for( int i = 0 ; i < N_OF_QUEUES ; i++ )
       if( qhead_create(proc_queues+i,i) != 0 )
@@ -332,15 +337,18 @@
   int getQueueQuantum(int id) { return myPow2(id)*SMALLEST_QUANTUM; }
 
   // needs to be called inside a semaphore
-  procpack * getCurrentProcessPackage()
+  procpack * getCurrentProcessPackage(int stay_on_queue)
   {
+    int new_queue_id;
     procpack * pack = (procpack *) malloc(sizeof(procpack));
     if( pack == NULL ){
       fatal_error("Could not allocate memory.\n");
       exit(0); //abort program
     }
     pack->process = current_proc;
-    pack->queue = getQueueFromId(getHigherPriorityQueueId(current_queue.id));
+    if(stay_on_queue) new_queue_id = current_queue.id;
+    else new_queue_id = getHigherPriorityQueueId(current_queue.id);
+    pack->queue = getQueueFromId(new_queue_id);
     return pack;
   }
 
@@ -356,11 +364,11 @@
   }
 
   // needs to be called inside a semaphore
-  void ioHandler(int pid)
+  void ioHandler(int pid, int stay_on_queue)
   {
     void * info;
     pthread_t thread;
-    info = (void *) getCurrentProcessPackage(); // inside semaphore
+    info = (void *) getCurrentProcessPackage(stay_on_queue); // inside semaphore
     pthread_create(&thread,NULL,ioThreadFunction,info);
     io_threads++;
     #ifdef _DEBUG
@@ -395,7 +403,7 @@
     procname = procinfo->name;
     my_pid = procinfo->pid;
     new_queue = pack->queue;
-    sleep(IO_BLOCK_TIME); // simulating IO
+    sleep(IO_BLOCK_TIME); // simulating I/O
     /////////////////////////////////
     // ENTERS CRITICAL REGION
     // Manipulates io_process and
@@ -405,7 +413,7 @@
     /////////////////////////////////
     qhead_ins(new_queue,io_proc);
     io_threads--;
-    printf("Process %s is no longer blocked by IO and was inserted in queue #%d.\n"
+    printf("Process %s is no longer blocked by I/O and was inserted in queue #%d.\n"
     ,procname,qhead_getid(new_queue));
     /////////////////////////////////
     exitCR(semId);
@@ -438,7 +446,7 @@
       if( i == current_queue.id ) isEmpty &= qhead_empty(aux_queue)==QUEUE_OK;
       printf("Queue #%d: %s\n",i,isEmpty?
       "empty":"not empty (from first to last)");
-      qhead_create(&aux,-1);
+      qhead_create(&aux,-2);
       while( qhead_empty(f) == QUEUE_FALSE )
       {
         qnode n = qhead_rm(f);
@@ -468,7 +476,7 @@
       printf("There %s %d remaining process%s\n",one?"is":"are",processes_count,
               one?"":"es");
       printf("* %d in queue\n",processes_count-io_threads);
-      printf("* %d blocked by IO\n",io_threads);
+      printf("* %d blocked by I/O\n",io_threads);
     }
     else
       printf("No remaining processes\n");
