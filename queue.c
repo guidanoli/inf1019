@@ -48,7 +48,7 @@
 
   void qnode_destroy ( qnode * node )
   {
-    if( node && *node )
+    if( node != NULL && *node != NULL )
     {
       free(*node);
       *node = NULL;
