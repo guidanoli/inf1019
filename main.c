@@ -138,7 +138,7 @@
         quantum = get_queue_quantum(current_queue.id);
         #ifdef _DEBUG
         if( qhead_empty(queue) == QUEUE_FALSE )
-          printf("The scheduler is dealing with queue #%d.\n",current_queue.id);
+          printf("\nThe scheduler is dealing with queue #%d.\n",current_queue.id);
         #endif
       }
 
@@ -157,6 +157,8 @@
         /////////////////////////////////
         if( qhead_empty(queue) == QUEUE_FALSE )
         {
+          printf("\n");
+          dump_queues();
           current_proc = qhead_rm(queue);
           procinfo = (process) qnode_getinfo(current_proc);
           pid = procinfo->pid;
@@ -211,7 +213,8 @@
           // CPU
           int new_queue_id = get_lower_priority_queue_id(current_queue.id);
           #ifdef _DEBUG
-          printf("Process %s was interrupted for exceeding queue quantum of %d time units .\n",procname,quantum);
+          printf("Process %s was interrupted for exceeding queue quantum of %d time unit%s .\n",
+          procname, quantum, quantum==1?"":"s");
           #endif
           if( new_queue_id == current_queue.id )
           {
@@ -239,7 +242,6 @@
             #endif
           }
         }
-        dump_queues();
         /////////////////////////////////
         sem_exit_cr(semId);
         /////////////////////////////////
@@ -358,7 +360,11 @@
     {
       #ifdef _DEBUG
       if( processes_count != io_threads && qhead_empty(current_queue.queue) == QUEUE_FALSE )
-        printf("Queue #%d has reached its limit of %d cycles.\n",current_queue.id,get_queue_runs(current_queue.id));
+      {
+        int runs = get_queue_runs(current_queue.id);
+        printf("Queue #%d has reached its limit of %d cycle%s.\n",
+        current_queue.id, runs, runs==1?"":"s");
+      }
       #endif
       set_current_queue((current_queue.id+1)%N_OF_QUEUES); // forces next queue
     }
@@ -477,15 +483,27 @@
     if( qhead_ins(new_queue,io_proc) != QUEUE_OK )
     {
       if( new_queue == aux_queue )
+      {
         fatal_error("Could not insert process %s in auxiliary queue.\n",
         procname);
+      }
       else
+      {
         fatal_error("Could not insert process %s in queue #%d.\n",
         procname, qhead_getid(new_queue));
+      }
     }
     io_threads--;
-    printf("Process %s is no longer blocked by I/O and was inserted in queue #%d.\n",
-    procname, qhead_getid(new_queue));
+    if( new_queue == aux_queue )
+    {
+      printf("Process %s is no longer blocked by I/O and was inserted in auxiliary queue.\n",
+      procname);
+    }
+    else
+    {
+      printf("Process %s is no longer blocked by I/O and was inserted in queue #%d.\n",
+      procname, qhead_getid(new_queue));
+    }
     sem_exit_cr(semId);
     pthread_exit(NULL); // end thread
   }
