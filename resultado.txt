@@ -1,547 +1,550 @@
-
-$center$$underline$RESULTADO
-
-======= PARSING...
-A [5303] 0/6, 1 left for next I/O
-Child A inserted in queue #0
-B [5304] 0/17, 5 left for next I/O
-Child B inserted in queue #0
-C [5305] 0/22, 14 left for next I/O
-Child C inserted in queue #0
-D [5306] 0/23, 3 left for next I/O
-Child D inserted in queue #0
-======= PARSING ENDED...
-
-======= SCHEDULING 4 PROCESSES...
-
-The scheduler is dealing with queue #0.
-
-Queue #0: not empty (from first to last)
-- A [5303] 0/6, 1 left for next I/O
-- B [5304] 0/17, 5 left for next I/O
-- C [5305] 0/22, 14 left for next I/O
-- D [5306] 0/23, 3 left for next I/O
-Queue #1: empty
-Queue #2: empty
-There are 4 remaining processes
-* 4 in queue
-* 0 blocked by I/O
-Scheduling process A...
-Child process A is executing... ( 1 1 1 1 1 1 )
-5303
-Process A was blocked by I/O
-...and will remain on queue #0 (for queue quantum coinciding with I/O)
-
-Queue #0: not empty (from first to last)
-- B [5304] 0/17, 5 left for next I/O
-- C [5305] 0/22, 14 left for next I/O
-- D [5306] 0/23, 3 left for next I/O
-Queue #1: empty
-Queue #2: empty
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process B...
-Child process B is executing... ( 5 4 4 4 )
-5304
-Process B was interrupted for exceeding queue quantum of 1 time unit .
-Process B will migrate from queue #0 to queue #1
-
-Queue #0: not empty (from first to last)
-- C [5305] 0/22, 14 left for next I/O
-- D [5306] 0/23, 3 left for next I/O
-Queue #1: not empty (from first to last)
-- B [5304] 1/17, 4 left for next I/O
-Queue #2: empty
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process C...
-Child process C is executing... ( 14 8 )
-5305
-Process C was interrupted for exceeding queue quantum of 1 time unit .
-Process C will migrate from queue #0 to queue #1
-
-Queue #0: not empty (from first to last)
-- D [5306] 0/23, 3 left for next I/O
-Queue #1: not empty (from first to last)
-- B [5304] 1/17, 4 left for next I/O
-- C [5305] 1/22, 13 left for next I/O
-Queue #2: empty
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process D...
-Child process D is executing... ( 3 5 9 6 )
-Process A is no longer blocked by I/O and was inserted in auxiliary queue.
-5306
-Process D was interrupted for exceeding queue quantum of 1 time unit .
-Process D will migrate from queue #0 to queue #1
-
-The scheduler is dealing with queue #0.
-
-Queue #0: not empty (from first to last)
-- A [5303] 1/6, 1 left for next I/O
-Queue #1: not empty (from first to last)
-- B [5304] 1/17, 4 left for next I/O
-- C [5305] 1/22, 13 left for next I/O
-- D [5306] 1/23, 2 left for next I/O
-Queue #2: empty
-There are 4 remaining processes
-* 4 in queue
-* 0 blocked by I/O
-Scheduling process A...
-5303
-Process A was blocked by I/O
-...and will remain on queue #0 (for queue quantum coinciding with I/O)
-
-The scheduler is dealing with queue #1.
-
-Queue #0: empty
-Queue #1: not empty (from first to last)
-- B [5304] 1/17, 4 left for next I/O
-- C [5305] 1/22, 13 left for next I/O
-- D [5306] 1/23, 2 left for next I/O
-Queue #2: empty
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process B...
-5304
-5304
-Process B was interrupted for exceeding queue quantum of 2 time units .
-Process B will migrate from queue #1 to queue #2
-
-Queue #0: empty
-Queue #1: not empty (from first to last)
-- C [5305] 1/22, 13 left for next I/O
-- D [5306] 1/23, 2 left for next I/O
-Queue #2: not empty (from first to last)
-- B [5304] 3/17, 2 left for next I/O
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process C...
-5305
-5305
-Process C was interrupted for exceeding queue quantum of 2 time units .
-Process C will migrate from queue #1 to queue #2
-
-Queue #0: empty
-Queue #1: not empty (from first to last)
-- D [5306] 1/23, 2 left for next I/O
-Queue #2: not empty (from first to last)
-- B [5304] 3/17, 2 left for next I/O
-- C [5305] 3/22, 11 left for next I/O
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process D...
-5306
-Process A is no longer blocked by I/O and was inserted in queue #0.
-5306
-Process D was blocked by I/O
-...and will remain on queue #1 (for queue quantum coinciding with I/O)
-
-The scheduler is dealing with queue #2.
-
-Queue #0: not empty (from first to last)
-- A [5303] 2/6, 1 left for next I/O
-Queue #1: empty
-Queue #2: not empty (from first to last)
-- B [5304] 3/17, 2 left for next I/O
-- C [5305] 3/22, 11 left for next I/O
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process B...
-5304
-5304
-Process B was blocked by I/O
-
-Queue #0: not empty (from first to last)
-- A [5303] 2/6, 1 left for next I/O
-Queue #1: empty
-Queue #2: not empty (from first to last)
-- C [5305] 3/22, 11 left for next I/O
-There are 4 remaining processes
-* 2 in queue
-* 2 blocked by I/O
-Scheduling process C...
-5305
-5305
-Process D is no longer blocked by I/O and was inserted in queue #1.
-5305
-Process B is no longer blocked by I/O and was inserted in queue #1.
-5305
-Process C was interrupted for exceeding queue quantum of 4 time units .
-Process C will remain in queue #2.
-Queue #2 has reached its limit of 1 cycle.
-
-The scheduler is dealing with queue #0.
-
-Queue #0: not empty (from first to last)
-- A [5303] 2/6, 1 left for next I/O
-Queue #1: not empty (from first to last)
-- D [5306] 3/23, 5 left for next I/O
-- B [5304] 5/17, 4 left for next I/O
-Queue #2: not empty (from first to last)
-- C [5305] 7/22, 7 left for next I/O
-There are 4 remaining processes
-* 4 in queue
-* 0 blocked by I/O
-Scheduling process A...
-5303
-Process A was blocked by I/O
-...and will remain on queue #0 (for queue quantum coinciding with I/O)
-
-The scheduler is dealing with queue #1.
-
-Queue #0: empty
-Queue #1: not empty (from first to last)
-- D [5306] 3/23, 5 left for next I/O
-- B [5304] 5/17, 4 left for next I/O
-Queue #2: not empty (from first to last)
-- C [5305] 7/22, 7 left for next I/O
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process D...
-5306
-5306
-Process D was interrupted for exceeding queue quantum of 2 time units .
-Process D will migrate from queue #1 to queue #2
-
-Queue #0: empty
-Queue #1: not empty (from first to last)
-- B [5304] 5/17, 4 left for next I/O
-Queue #2: not empty (from first to last)
-- C [5305] 7/22, 7 left for next I/O
-- D [5306] 5/23, 3 left for next I/O
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process B...
-Process A is no longer blocked by I/O and was inserted in queue #0.
-5304
-5304
-Process B was interrupted for exceeding queue quantum of 2 time units .
-Process B will migrate from queue #1 to queue #2
-
-The scheduler is dealing with queue #2.
-
-Queue #0: not empty (from first to last)
-- A [5303] 3/6, 1 left for next I/O
-Queue #1: empty
-Queue #2: not empty (from first to last)
-- C [5305] 7/22, 7 left for next I/O
-- D [5306] 5/23, 3 left for next I/O
-- B [5304] 7/17, 2 left for next I/O
-There are 4 remaining processes
-* 4 in queue
-* 0 blocked by I/O
-Scheduling process C...
-5305
-5305
-5305
-5305
-Process C was interrupted for exceeding queue quantum of 4 time units .
-Process C will remain in queue #2.
-
-Queue #0: not empty (from first to last)
-- A [5303] 3/6, 1 left for next I/O
-Queue #1: empty
-Queue #2: not empty (from first to last)
-- D [5306] 5/23, 3 left for next I/O
-- B [5304] 7/17, 2 left for next I/O
-* C [5305] 11/22, 3 left for next I/O
-There are 4 remaining processes
-* 4 in queue
-* 0 blocked by I/O
-Scheduling process D...
-5306
-5306
-5306
-Process D was blocked by I/O
-
-Queue #0: not empty (from first to last)
-- A [5303] 3/6, 1 left for next I/O
-Queue #1: empty
-Queue #2: not empty (from first to last)
-- B [5304] 7/17, 2 left for next I/O
-* C [5305] 11/22, 3 left for next I/O
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process B...
-5304
-5304
-Process B was blocked by I/O
-Queue #2 has reached its limit of 1 cycle.
-
-The scheduler is dealing with queue #0.
-
-Queue #0: not empty (from first to last)
-- A [5303] 3/6, 1 left for next I/O
-Queue #1: empty
-Queue #2: not empty (from first to last)
-- C [5305] 11/22, 3 left for next I/O
-There are 4 remaining processes
-* 2 in queue
-* 2 blocked by I/O
-Scheduling process A...
-Process D is no longer blocked by I/O and was inserted in queue #1.
-5303
-Process A was blocked by I/O
-...and will remain on queue #0 (for queue quantum coinciding with I/O)
-
-The scheduler is dealing with queue #1.
-
-Queue #0: empty
-Queue #1: not empty (from first to last)
-- D [5306] 8/23, 9 left for next I/O
-Queue #2: not empty (from first to last)
-- C [5305] 11/22, 3 left for next I/O
-There are 4 remaining processes
-* 2 in queue
-* 2 blocked by I/O
-Scheduling process D...
-5306
-Process B is no longer blocked by I/O and was inserted in auxiliary queue.
-5306
-Process D was interrupted for exceeding queue quantum of 2 time units .
-Process D will migrate from queue #1 to queue #2
-
-The scheduler is dealing with queue #1.
-
-Queue #0: empty
-Queue #1: not empty (from first to last)
-- B [5304] 9/17, 4 left for next I/O
-Queue #2: not empty (from first to last)
-- C [5305] 11/22, 3 left for next I/O
-- D [5306] 10/23, 7 left for next I/O
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process B...
-Process A is no longer blocked by I/O and was inserted in queue #0.
-5304
-5304
-Process B was interrupted for exceeding queue quantum of 2 time units .
-Process B will migrate from queue #1 to queue #2
-
-The scheduler is dealing with queue #2.
-
-Queue #0: not empty (from first to last)
-- A [5303] 4/6, 1 left for next I/O
-Queue #1: empty
-Queue #2: not empty (from first to last)
-- C [5305] 11/22, 3 left for next I/O
-- D [5306] 10/23, 7 left for next I/O
-- B [5304] 11/17, 2 left for next I/O
-There are 4 remaining processes
-* 4 in queue
-* 0 blocked by I/O
-Scheduling process C...
-5305
-5305
-5305
-Process C was blocked by I/O
-
-Queue #0: not empty (from first to last)
-- A [5303] 4/6, 1 left for next I/O
-Queue #1: empty
-Queue #2: not empty (from first to last)
-- D [5306] 10/23, 7 left for next I/O
-- B [5304] 11/17, 2 left for next I/O
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process D...
-5306
-5306
-5306
-Process C is no longer blocked by I/O and was inserted in queue #1.
-5306
-Process D was interrupted for exceeding queue quantum of 4 time units .
-Process D will remain in queue #2.
-
-Queue #0: not empty (from first to last)
-- A [5303] 4/6, 1 left for next I/O
-Queue #1: not empty (from first to last)
-- C [5305] 14/22, 8 left for next I/O
-Queue #2: not empty (from first to last)
-- B [5304] 11/17, 2 left for next I/O
-* D [5306] 14/23, 3 left for next I/O
-There are 4 remaining processes
-* 4 in queue
-* 0 blocked by I/O
-Scheduling process B...
-5304
-5304
-Process B was blocked by I/O
-Queue #2 has reached its limit of 1 cycle.
-
-The scheduler is dealing with queue #0.
-
-Queue #0: not empty (from first to last)
-- A [5303] 4/6, 1 left for next I/O
-Queue #1: not empty (from first to last)
-- C [5305] 14/22, 8 left for next I/O
-Queue #2: not empty (from first to last)
-- D [5306] 14/23, 3 left for next I/O
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process A...
-5303
-Process A was blocked by I/O
-...and will remain on queue #0 (for queue quantum coinciding with I/O)
-
-The scheduler is dealing with queue #1.
-
-Queue #0: empty
-Queue #1: not empty (from first to last)
-- C [5305] 14/22, 8 left for next I/O
-Queue #2: not empty (from first to last)
-- D [5306] 14/23, 3 left for next I/O
-There are 4 remaining processes
-* 2 in queue
-* 2 blocked by I/O
-Scheduling process C...
-5305
-Process B is no longer blocked by I/O and was inserted in auxiliary queue.
-5305
-Process C was interrupted for exceeding queue quantum of 2 time units .
-Process C will migrate from queue #1 to queue #2
-
-The scheduler is dealing with queue #1.
-
-Queue #0: empty
-Queue #1: not empty (from first to last)
-- B [5304] 13/17, 4 left for next I/O
-Queue #2: not empty (from first to last)
-- D [5306] 14/23, 3 left for next I/O
-- C [5305] 16/22, 6 left for next I/O
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process B...
-Process A is no longer blocked by I/O and was inserted in queue #0.
-5304
-5304
-Process B was interrupted for exceeding queue quantum of 2 time units .
-Process B will migrate from queue #1 to queue #2
-
-The scheduler is dealing with queue #2.
-
-Queue #0: not empty (from first to last)
-- A [5303] 5/6, 1 left for next I/O
-Queue #1: empty
-Queue #2: not empty (from first to last)
-- D [5306] 14/23, 3 left for next I/O
-- C [5305] 16/22, 6 left for next I/O
-- B [5304] 15/17, 2 left for next I/O
-There are 4 remaining processes
-* 4 in queue
-* 0 blocked by I/O
-Scheduling process D...
-5306
-5306
-5306
-Process D was blocked by I/O
-
-Queue #0: not empty (from first to last)
-- A [5303] 5/6, 1 left for next I/O
-Queue #1: empty
-Queue #2: not empty (from first to last)
-- C [5305] 16/22, 6 left for next I/O
-- B [5304] 15/17, 2 left for next I/O
-There are 4 remaining processes
-* 3 in queue
-* 1 blocked by I/O
-Scheduling process C...
-5305
-5305
-5305
-Process D is no longer blocked by I/O and was inserted in queue #1.
-5305
-Process C was interrupted for exceeding queue quantum of 4 time units .
-Process C will remain in queue #2.
-
-Queue #0: not empty (from first to last)
-- A [5303] 5/6, 1 left for next I/O
-Queue #1: not empty (from first to last)
-- D [5306] 17/23, 6 left for next I/O
-Queue #2: not empty (from first to last)
-- B [5304] 15/17, 2 left for next I/O
-* C [5305] 20/22, 2 left for next I/O
-There are 4 remaining processes
-* 4 in queue
-* 0 blocked by I/O
-Scheduling process B...
-5304
-5304
-Process B was terminated.
-Queue #2 has reached its limit of 1 cycle.
-
-The scheduler is dealing with queue #0.
-
-Queue #0: not empty (from first to last)
-- A [5303] 5/6, 1 left for next I/O
-Queue #1: not empty (from first to last)
-- D [5306] 17/23, 6 left for next I/O
-Queue #2: not empty (from first to last)
-- C [5305] 20/22, 2 left for next I/O
-There are 3 remaining processes
-* 3 in queue
-* 0 blocked by I/O
-Scheduling process A...
-5303
-Process A was terminated.
-
-The scheduler is dealing with queue #1.
-
-Queue #0: empty
-Queue #1: not empty (from first to last)
-- D [5306] 17/23, 6 left for next I/O
-Queue #2: not empty (from first to last)
-- C [5305] 20/22, 2 left for next I/O
-There are 2 remaining processes
-* 2 in queue
-* 0 blocked by I/O
-Scheduling process D...
-5306
-5306
-Process D was interrupted for exceeding queue quantum of 2 time units .
-Process D will migrate from queue #1 to queue #2
-
-The scheduler is dealing with queue #2.
-
-Queue #0: empty
-Queue #1: empty
-Queue #2: not empty (from first to last)
-- C [5305] 20/22, 2 left for next I/O
-- D [5306] 19/23, 4 left for next I/O
-There are 2 remaining processes
-* 2 in queue
-* 0 blocked by I/O
-Scheduling process C...
-5305
-5305
-Process C was terminated.
-
-Queue #0: empty
-Queue #1: empty
-Queue #2: not empty (from first to last)
-- D [5306] 19/23, 4 left for next I/O
-There is 1 remaining process
-* 1 in queue
-* 0 blocked by I/O
-Scheduling process D...
-5306
-5306
-5306
-5306
-Process D was terminated.
-======= END OF SCHEDULING
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                                                                              ┃
+┃                                  RESULTADO                                   ┃
+┃                                  ⎺⎺⎺⎺⎺⎺⎺⎺⎺                                   ┃
+┃                                                                              ┃
+┃  ======= PARSING...                                                          ┃
+┃  A [5303] 0/6, 1 left for next I/O                                           ┃
+┃  Child A inserted in queue #0                                                ┃
+┃  B [5304] 0/17, 5 left for next I/O                                          ┃
+┃  Child B inserted in queue #0                                                ┃
+┃  C [5305] 0/22, 14 left for next I/O                                         ┃
+┃  Child C inserted in queue #0                                                ┃
+┃  D [5306] 0/23, 3 left for next I/O                                          ┃
+┃  Child D inserted in queue #0                                                ┃
+┃  ======= PARSING ENDED...                                                    ┃
+┃                                                                              ┃
+┃  ======= SCHEDULING 4 PROCESSES...                                           ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #0.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 0/6, 1 left for next I/O                                         ┃
+┃  - B [5304] 0/17, 5 left for next I/O                                        ┃
+┃  - C [5305] 0/22, 14 left for next I/O                                       ┃
+┃  - D [5306] 0/23, 3 left for next I/O                                        ┃
+┃  Queue #1: empty                                                             ┃
+┃  Queue #2: empty                                                             ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 4 in queue                                                                ┃
+┃  * 0 blocked by I/O                                                          ┃
+┃  Scheduling process A...                                                     ┃
+┃  Child process A is executing... ( 1 1 1 1 1 1 )                             ┃
+┃  5303                                                                        ┃
+┃  Process A was blocked by I/O                                                ┃
+┃  ...and will remain on queue #0 (for queue quantum coinciding with I/O)      ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - B [5304] 0/17, 5 left for next I/O                                        ┃
+┃  - C [5305] 0/22, 14 left for next I/O                                       ┃
+┃  - D [5306] 0/23, 3 left for next I/O                                        ┃
+┃  Queue #1: empty                                                             ┃
+┃  Queue #2: empty                                                             ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process B...                                                     ┃
+┃  Child process B is executing... ( 5 4 4 4 )                                 ┃
+┃  5304                                                                        ┃
+┃  Process B was interrupted for exceeding queue quantum of 1 time unit .      ┃
+┃  Process B will migrate from queue #0 to queue #1                            ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - C [5305] 0/22, 14 left for next I/O                                       ┃
+┃  - D [5306] 0/23, 3 left for next I/O                                        ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - B [5304] 1/17, 4 left for next I/O                                        ┃
+┃  Queue #2: empty                                                             ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process C...                                                     ┃
+┃  Child process C is executing... ( 14 8 )                                    ┃
+┃  5305                                                                        ┃
+┃  Process C was interrupted for exceeding queue quantum of 1 time unit .      ┃
+┃  Process C will migrate from queue #0 to queue #1                            ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - D [5306] 0/23, 3 left for next I/O                                        ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - B [5304] 1/17, 4 left for next I/O                                        ┃
+┃  - C [5305] 1/22, 13 left for next I/O                                       ┃
+┃  Queue #2: empty                                                             ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process D...                                                     ┃
+┃  Child process D is executing... ( 3 5 9 6 )                                 ┃
+┃  Process A is no longer blocked by I/O and was inserted in auxiliary queue.  ┃
+┃  5306                                                                        ┃
+┃  Process D was interrupted for exceeding queue quantum of 1 time unit .      ┃
+┃  Process D will migrate from queue #0 to queue #1                            ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #0.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 1/6, 1 left for next I/O                                         ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - B [5304] 1/17, 4 left for next I/O                                        ┃
+┃  - C [5305] 1/22, 13 left for next I/O                                       ┃
+┃  - D [5306] 1/23, 2 left for next I/O                                        ┃
+┃  Queue #2: empty                                                             ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 4 in queue                                                                ┃
+┃  * 0 blocked by I/O                                                          ┃
+┃  Scheduling process A...                                                     ┃
+┃  5303                                                                        ┃
+┃  Process A was blocked by I/O                                                ┃
+┃  ...and will remain on queue #0 (for queue quantum coinciding with I/O)      ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #1.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: empty                                                             ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - B [5304] 1/17, 4 left for next I/O                                        ┃
+┃  - C [5305] 1/22, 13 left for next I/O                                       ┃
+┃  - D [5306] 1/23, 2 left for next I/O                                        ┃
+┃  Queue #2: empty                                                             ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process B...                                                     ┃
+┃  5304                                                                        ┃
+┃  5304                                                                        ┃
+┃  Process B was interrupted for exceeding queue quantum of 2 time units .     ┃
+┃  Process B will migrate from queue #1 to queue #2                            ┃
+┃                                                                              ┃
+┃  Queue #0: empty                                                             ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - C [5305] 1/22, 13 left for next I/O                                       ┃
+┃  - D [5306] 1/23, 2 left for next I/O                                        ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - B [5304] 3/17, 2 left for next I/O                                        ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process C...                                                     ┃
+┃  5305                                                                        ┃
+┃  5305                                                                        ┃
+┃  Process C was interrupted for exceeding queue quantum of 2 time units .     ┃
+┃  Process C will migrate from queue #1 to queue #2                            ┃
+┃                                                                              ┃
+┃  Queue #0: empty                                                             ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - D [5306] 1/23, 2 left for next I/O                                        ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - B [5304] 3/17, 2 left for next I/O                                        ┃
+┃  - C [5305] 3/22, 11 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process D...                                                     ┃
+┃  5306                                                                        ┃
+┃  Process A is no longer blocked by I/O and was inserted in queue #0.         ┃
+┃  5306                                                                        ┃
+┃  Process D was blocked by I/O                                                ┃
+┃  ...and will remain on queue #1 (for queue quantum coinciding with I/O)      ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #2.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 2/6, 1 left for next I/O                                         ┃
+┃  Queue #1: empty                                                             ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - B [5304] 3/17, 2 left for next I/O                                        ┃
+┃  - C [5305] 3/22, 11 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process B...                                                     ┃
+┃  5304                                                                        ┃
+┃  5304                                                                        ┃
+┃  Process B was blocked by I/O                                                ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 2/6, 1 left for next I/O                                         ┃
+┃  Queue #1: empty                                                             ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - C [5305] 3/22, 11 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 2 in queue                                                                ┃
+┃  * 2 blocked by I/O                                                          ┃
+┃  Scheduling process C...                                                     ┃
+┃  5305                                                                        ┃
+┃  5305                                                                        ┃
+┃  Process D is no longer blocked by I/O and was inserted in queue #1.         ┃
+┃  5305                                                                        ┃
+┃  Process B is no longer blocked by I/O and was inserted in queue #1.         ┃
+┃  5305                                                                        ┃
+┃  Process C was interrupted for exceeding queue quantum of 4 time units .     ┃
+┃  Process C will remain in queue #2.                                          ┃
+┃  Queue #2 has reached its limit of 1 cycle.                                  ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #0.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 2/6, 1 left for next I/O                                         ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - D [5306] 3/23, 5 left for next I/O                                        ┃
+┃  - B [5304] 5/17, 4 left for next I/O                                        ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - C [5305] 7/22, 7 left for next I/O                                        ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 4 in queue                                                                ┃
+┃  * 0 blocked by I/O                                                          ┃
+┃  Scheduling process A...                                                     ┃
+┃  5303                                                                        ┃
+┃  Process A was blocked by I/O                                                ┃
+┃  ...and will remain on queue #0 (for queue quantum coinciding with I/O)      ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #1.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: empty                                                             ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - D [5306] 3/23, 5 left for next I/O                                        ┃
+┃  - B [5304] 5/17, 4 left for next I/O                                        ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - C [5305] 7/22, 7 left for next I/O                                        ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process D...                                                     ┃
+┃  5306                                                                        ┃
+┃  5306                                                                        ┃
+┃  Process D was interrupted for exceeding queue quantum of 2 time units .     ┃
+┃  Process D will migrate from queue #1 to queue #2                            ┃
+┃                                                                              ┃
+┃  Queue #0: empty                                                             ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - B [5304] 5/17, 4 left for next I/O                                        ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - C [5305] 7/22, 7 left for next I/O                                        ┃
+┃  - D [5306] 5/23, 3 left for next I/O                                        ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process B...                                                     ┃
+┃  Process A is no longer blocked by I/O and was inserted in queue #0.         ┃
+┃  5304                                                                        ┃
+┃  5304                                                                        ┃
+┃  Process B was interrupted for exceeding queue quantum of 2 time units .     ┃
+┃  Process B will migrate from queue #1 to queue #2                            ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #2.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 3/6, 1 left for next I/O                                         ┃
+┃  Queue #1: empty                                                             ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - C [5305] 7/22, 7 left for next I/O                                        ┃
+┃  - D [5306] 5/23, 3 left for next I/O                                        ┃
+┃  - B [5304] 7/17, 2 left for next I/O                                        ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 4 in queue                                                                ┃
+┃  * 0 blocked by I/O                                                          ┃
+┃  Scheduling process C...                                                     ┃
+┃  5305                                                                        ┃
+┃  5305                                                                        ┃
+┃  5305                                                                        ┃
+┃  5305                                                                        ┃
+┃  Process C was interrupted for exceeding queue quantum of 4 time units .     ┃
+┃  Process C will remain in queue #2.                                          ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 3/6, 1 left for next I/O                                         ┃
+┃  Queue #1: empty                                                             ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - D [5306] 5/23, 3 left for next I/O                                        ┃
+┃  - B [5304] 7/17, 2 left for next I/O                                        ┃
+┃  * C [5305] 11/22, 3 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 4 in queue                                                                ┃
+┃  * 0 blocked by I/O                                                          ┃
+┃  Scheduling process D...                                                     ┃
+┃  5306                                                                        ┃
+┃  5306                                                                        ┃
+┃  5306                                                                        ┃
+┃  Process D was blocked by I/O                                                ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 3/6, 1 left for next I/O                                         ┃
+┃  Queue #1: empty                                                             ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - B [5304] 7/17, 2 left for next I/O                                        ┃
+┃  * C [5305] 11/22, 3 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process B...                                                     ┃
+┃  5304                                                                        ┃
+┃  5304                                                                        ┃
+┃  Process B was blocked by I/O                                                ┃
+┃  Queue #2 has reached its limit of 1 cycle.                                  ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #0.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 3/6, 1 left for next I/O                                         ┃
+┃  Queue #1: empty                                                             ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - C [5305] 11/22, 3 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 2 in queue                                                                ┃
+┃  * 2 blocked by I/O                                                          ┃
+┃  Scheduling process A...                                                     ┃
+┃  Process D is no longer blocked by I/O and was inserted in queue #1.         ┃
+┃  5303                                                                        ┃
+┃  Process A was blocked by I/O                                                ┃
+┃  ...and will remain on queue #0 (for queue quantum coinciding with I/O)      ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #1.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: empty                                                             ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - D [5306] 8/23, 9 left for next I/O                                        ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - C [5305] 11/22, 3 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 2 in queue                                                                ┃
+┃  * 2 blocked by I/O                                                          ┃
+┃  Scheduling process D...                                                     ┃
+┃  5306                                                                        ┃
+┃  Process B is no longer blocked by I/O and was inserted in auxiliary queue.  ┃
+┃  5306                                                                        ┃
+┃  Process D was interrupted for exceeding queue quantum of 2 time units .     ┃
+┃  Process D will migrate from queue #1 to queue #2                            ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #1.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: empty                                                             ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - B [5304] 9/17, 4 left for next I/O                                        ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - C [5305] 11/22, 3 left for next I/O                                       ┃
+┃  - D [5306] 10/23, 7 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process B...                                                     ┃
+┃  Process A is no longer blocked by I/O and was inserted in queue #0.         ┃
+┃  5304                                                                        ┃
+┃  5304                                                                        ┃
+┃  Process B was interrupted for exceeding queue quantum of 2 time units .     ┃
+┃  Process B will migrate from queue #1 to queue #2                            ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #2.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 4/6, 1 left for next I/O                                         ┃
+┃  Queue #1: empty                                                             ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - C [5305] 11/22, 3 left for next I/O                                       ┃
+┃  - D [5306] 10/23, 7 left for next I/O                                       ┃
+┃  - B [5304] 11/17, 2 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 4 in queue                                                                ┃
+┃  * 0 blocked by I/O                                                          ┃
+┃  Scheduling process C...                                                     ┃
+┃  5305                                                                        ┃
+┃  5305                                                                        ┃
+┃  5305                                                                        ┃
+┃  Process C was blocked by I/O                                                ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 4/6, 1 left for next I/O                                         ┃
+┃  Queue #1: empty                                                             ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - D [5306] 10/23, 7 left for next I/O                                       ┃
+┃  - B [5304] 11/17, 2 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process D...                                                     ┃
+┃  5306                                                                        ┃
+┃  5306                                                                        ┃
+┃  5306                                                                        ┃
+┃  Process C is no longer blocked by I/O and was inserted in queue #1.         ┃
+┃  5306                                                                        ┃
+┃  Process D was interrupted for exceeding queue quantum of 4 time units .     ┃
+┃  Process D will remain in queue #2.                                          ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 4/6, 1 left for next I/O                                         ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - C [5305] 14/22, 8 left for next I/O                                       ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - B [5304] 11/17, 2 left for next I/O                                       ┃
+┃  * D [5306] 14/23, 3 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 4 in queue                                                                ┃
+┃  * 0 blocked by I/O                                                          ┃
+┃  Scheduling process B...                                                     ┃
+┃  5304                                                                        ┃
+┃  5304                                                                        ┃
+┃  Process B was blocked by I/O                                                ┃
+┃  Queue #2 has reached its limit of 1 cycle.                                  ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #0.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 4/6, 1 left for next I/O                                         ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - C [5305] 14/22, 8 left for next I/O                                       ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - D [5306] 14/23, 3 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process A...                                                     ┃
+┃  5303                                                                        ┃
+┃  Process A was blocked by I/O                                                ┃
+┃  ...and will remain on queue #0 (for queue quantum coinciding with I/O)      ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #1.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: empty                                                             ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - C [5305] 14/22, 8 left for next I/O                                       ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - D [5306] 14/23, 3 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 2 in queue                                                                ┃
+┃  * 2 blocked by I/O                                                          ┃
+┃  Scheduling process C...                                                     ┃
+┃  5305                                                                        ┃
+┃  Process B is no longer blocked by I/O and was inserted in auxiliary queue.  ┃
+┃  5305                                                                        ┃
+┃  Process C was interrupted for exceeding queue quantum of 2 time units .     ┃
+┃  Process C will migrate from queue #1 to queue #2                            ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #1.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: empty                                                             ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - B [5304] 13/17, 4 left for next I/O                                       ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - D [5306] 14/23, 3 left for next I/O                                       ┃
+┃  - C [5305] 16/22, 6 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process B...                                                     ┃
+┃  Process A is no longer blocked by I/O and was inserted in queue #0.         ┃
+┃  5304                                                                        ┃
+┃  5304                                                                        ┃
+┃  Process B was interrupted for exceeding queue quantum of 2 time units .     ┃
+┃  Process B will migrate from queue #1 to queue #2                            ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #2.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 5/6, 1 left for next I/O                                         ┃
+┃  Queue #1: empty                                                             ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - D [5306] 14/23, 3 left for next I/O                                       ┃
+┃  - C [5305] 16/22, 6 left for next I/O                                       ┃
+┃  - B [5304] 15/17, 2 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 4 in queue                                                                ┃
+┃  * 0 blocked by I/O                                                          ┃
+┃  Scheduling process D...                                                     ┃
+┃  5306                                                                        ┃
+┃  5306                                                                        ┃
+┃  5306                                                                        ┃
+┃  Process D was blocked by I/O                                                ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 5/6, 1 left for next I/O                                         ┃
+┃  Queue #1: empty                                                             ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - C [5305] 16/22, 6 left for next I/O                                       ┃
+┃  - B [5304] 15/17, 2 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 1 blocked by I/O                                                          ┃
+┃  Scheduling process C...                                                     ┃
+┃  5305                                                                        ┃
+┃  5305                                                                        ┃
+┃  5305                                                                        ┃
+┃  Process D is no longer blocked by I/O and was inserted in queue #1.         ┃
+┃  5305                                                                        ┃
+┃  Process C was interrupted for exceeding queue quantum of 4 time units .     ┃
+┃  Process C will remain in queue #2.                                          ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 5/6, 1 left for next I/O                                         ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - D [5306] 17/23, 6 left for next I/O                                       ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - B [5304] 15/17, 2 left for next I/O                                       ┃
+┃  * C [5305] 20/22, 2 left for next I/O                                       ┃
+┃  There are 4 remaining processes                                             ┃
+┃  * 4 in queue                                                                ┃
+┃  * 0 blocked by I/O                                                          ┃
+┃  Scheduling process B...                                                     ┃
+┃  5304                                                                        ┃
+┃  5304                                                                        ┃
+┃  Process B was terminated.                                                   ┃
+┃  Queue #2 has reached its limit of 1 cycle.                                  ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #0.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: not empty (from first to last)                                    ┃
+┃  - A [5303] 5/6, 1 left for next I/O                                         ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - D [5306] 17/23, 6 left for next I/O                                       ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - C [5305] 20/22, 2 left for next I/O                                       ┃
+┃  There are 3 remaining processes                                             ┃
+┃  * 3 in queue                                                                ┃
+┃  * 0 blocked by I/O                                                          ┃
+┃  Scheduling process A...                                                     ┃
+┃  5303                                                                        ┃
+┃  Process A was terminated.                                                   ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #1.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: empty                                                             ┃
+┃  Queue #1: not empty (from first to last)                                    ┃
+┃  - D [5306] 17/23, 6 left for next I/O                                       ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - C [5305] 20/22, 2 left for next I/O                                       ┃
+┃  There are 2 remaining processes                                             ┃
+┃  * 2 in queue                                                                ┃
+┃  * 0 blocked by I/O                                                          ┃
+┃  Scheduling process D...                                                     ┃
+┃  5306                                                                        ┃
+┃  5306                                                                        ┃
+┃  Process D was interrupted for exceeding queue quantum of 2 time units .     ┃
+┃  Process D will migrate from queue #1 to queue #2                            ┃
+┃                                                                              ┃
+┃  The scheduler is dealing with queue #2.                                     ┃
+┃                                                                              ┃
+┃  Queue #0: empty                                                             ┃
+┃  Queue #1: empty                                                             ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - C [5305] 20/22, 2 left for next I/O                                       ┃
+┃  - D [5306] 19/23, 4 left for next I/O                                       ┃
+┃  There are 2 remaining processes                                             ┃
+┃  * 2 in queue                                                                ┃
+┃  * 0 blocked by I/O                                                          ┃
+┃  Scheduling process C...                                                     ┃
+┃  5305                                                                        ┃
+┃  5305                                                                        ┃
+┃  Process C was terminated.                                                   ┃
+┃                                                                              ┃
+┃  Queue #0: empty                                                             ┃
+┃  Queue #1: empty                                                             ┃
+┃  Queue #2: not empty (from first to last)                                    ┃
+┃  - D [5306] 19/23, 4 left for next I/O                                       ┃
+┃  There is 1 remaining process                                                ┃
+┃  * 1 in queue                                                                ┃
+┃  * 0 blocked by I/O                                                          ┃
+┃  Scheduling process D...                                                     ┃
+┃  5306                                                                        ┃
+┃  5306                                                                        ┃
+┃  5306                                                                        ┃
+┃  5306                                                                        ┃
+┃  Process D was terminated.                                                   ┃
+┃  ======= END OF SCHEDULING                                                   ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛

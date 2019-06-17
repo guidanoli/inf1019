@@ -10,6 +10,8 @@
 ┃                                                                              ┃
 ┃  Contém nesta pasta os seguintes arquivos:                                   ┃
 ┃                                                                              ┃
+┃  algorithm.txt     Descrição do algoritmo (1a iteração)                      ┃
+┃  algorithm2.txt    Descrição de modificações no algoritmo (2a iteração)      ┃
 ┃  main.c            Módulo interpretador e escalonador                        ┃
 ┃  Makefile          Arquivo make que gera os constructos                      ┃
 ┃  prog.c            Módulo para programa-usuário                              ┃
