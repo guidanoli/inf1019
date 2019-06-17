@@ -432,8 +432,12 @@
   void exit_handler(int pid)
   {
     qnode dead_node;
+    process procinfo;
     dead_node = current_proc;
     processes_count--;
+    procinfo = (process) qnode_getinfo(dead_node);
+    free(procinfo->rays);
+    free(procinfo);
     qnode_destroy(&dead_node);
     kill(pid,SIGKILL);
   }
@@ -505,6 +509,7 @@
       procname, qhead_getid(new_queue));
     }
     sem_exit_cr(semId);
+    free(info);
     pthread_exit(NULL); // end thread
   }
 
