@@ -1,1 +1,4 @@
-exec A (8)
+exec A (1,1,1,1,1,1)
+exec B (5,4,4,4)
+exec C (14,8)
+exec D (3,5,9,6)

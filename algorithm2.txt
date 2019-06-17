@@ -1,0 +1,84 @@
+
+$center$$underline$New algorithm : Modifications for 2nd reiteration
+
+$center$$underline$Messages
+
+The son process, while running, will send its message parent each second,
+notifying that one time unit has passed.
+
+If surpassed the queue quantum, the process will be downgraded. Otherwise,
+if the process enters I/O before the quantum, it will be upgraded. If
+the process is on the first queue, it can't be upgraded - and on the last
+queue it can't be downgraded.
+
+$line$
+
+$center$$underline$Processes
+
+Each process has the following information stored in a struct:
+* process id - numerical identification generated on fork
+* rays count - amount of tasks
+* rays - duration of each task in time units
+* name - arbitrary identification for the user
+* age - time running (in time units)
+
+$line$
+
+$center$$underline$I/O
+
+The process is taken care by a thread that will sleep for an arbitrary
+period of time (e.g. 3 seconds), simulating an I/O task. When finished,
+it will be put on the new queue.
+
+$line$
+
+$center$$underline$Termination
+
+A process terminates when all rays have been done. The process struct
+and the node itself will be freed properly.
+
+$line$
+
+$center$$underline$New algorithm to classify process into I/O, CPU, Terminated
+
+counter = 0;
+while( counter < quantum && process age < next io process age ); // wait
+if( age == io age )
+@  if( age == termination age )
+@    // TERMINATION
+@  else
+@    // I/O
+else
+@  // CPU
+  
+* counter will be increased each time scheduler receives SIGUSR1
+* quantum is determined by queue
+* process age is updaded alongside counter
+* next io process age is the next process age between two rays
+* termination age is the sum of all rays
+
+$line$
+
+$center$$underline$New algorithm to classify process into a new queue
+
+Inside I/O and TERMINATION, it is decided if the process will stay on the
+queue accordingly:
+
+if( quantum timer == quantum )
+@  stay on queue
+else
+@  go to higher priority queue
+  
+Inside CPU, the process will always go to a lower priority queue.
+
+If the new queue is equal to the previous queue, the process will be
+inserted on an auxiliary queue. When the scheduler empties the current
+queue, it unloads the auxiliary queue into the current queue, decrements
+the runs counter by one and if the counter is still positive and the
+queue is not empty, it will do the scheduling job again, until one of the
+two previous statements is false. This will, the scheduler can keep track
+of how many runs it has done in a queue and stop whenever it has reached
+the queue run limit ( determined by its priority level ), avoiding not
+scheduling processes of lower priority queues.
+
+
