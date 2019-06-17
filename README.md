@@ -1,2 +1,2 @@
-# siscomp02
-Virtual Memory Simulator - Computing Systems (INF1019) 
+# Virtual Memory Simulator
+The goal of this project is to implement a virtual memory simulator.
