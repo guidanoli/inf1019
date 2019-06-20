@@ -7,6 +7,7 @@
   #include <stdarg.h>
   #include <string.h>
   #include <unistd.h>
+  #include "page.h"
 
   #define PARAMS "<program> <algorithm> <log path> <page size> <total size>"
 
@@ -20,9 +21,11 @@
   /* Static functions */
   /********************/
 
-  static int fatal_error (const char * err_msg_format, ...);
-
+  // core functionality
   static int get_s (int page_size);
+
+  // utils
+  static int fatal_error (const char * err_msg_format, ...);
   static int is_power_of_two (int n);
   static void print_bin (int n);
   static void print_bin_aux(int n);
@@ -33,6 +36,7 @@
 
   int page_size; // in KB
   int total_size; // in MB
+  algorithm_t algorithm;
 
   /********/
   /* Main */
@@ -40,8 +44,6 @@
 
   int main (int argc, char ** argv)
   {
-    algorithm_t algorithm;
-
     // Arguments validation
     if( argc != 5 ) return fatal_error("Invalid parameters.\nExpected: %s\n", PARAMS);
     if( !strcmp(argv[1],"LRU") ) algorithm = LRU;
@@ -57,11 +59,13 @@
     if( !is_power_of_two(total_size) ) return fatal_error("Total size must be a power of 2.\n");
 
     int ret;
-    int line = 1;
+    unsigned int line = 1;
     unsigned int addr;
     unsigned int s = get_s(page_size);
     char rw;
     FILE * fp;
+
+    printf("s = %d\n",s);
 
     if( (fp = fopen(argv[2],"r")) == NULL ) return fatal_error("Could not read file %s.\n",argv[2]);
     while ( (ret = fscanf(fp, "%x %c ", &addr, &rw)) == 2 )
@@ -101,6 +105,7 @@
   // to obtain logical address)
   // page_size - page size, in KB
   // > s
+  // [!] It is assumed that the page is a power of 2
   static int get_s (int page_size)
   {
     int s = 10; // in KB
