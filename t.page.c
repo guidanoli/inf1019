@@ -2,13 +2,10 @@
   // Page test
   // Guilherme Dantas
 
-  #include <stdio.h>
-  #include <string.h>
-  #include <assert.h>
-  #include "page.h"
   #include "test.h"
+  #include "page.h"
 
-  int main( void )
+  int main ( void )
   {
     page pg = 0;
 
