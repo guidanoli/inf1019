@@ -12,6 +12,10 @@
 # Backup files
 *~
 
+# Automated tests
+t.*
+!t.*.c
+
 # Prerequisites
 *.d
 
