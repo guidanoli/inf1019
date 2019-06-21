@@ -21,7 +21,7 @@
   }
 
   inline void page_set_time (page * pg, unsigned int time) {
-    *pg &= ~3; // clears time but preserves flags
+    *pg &= 3; // clears time but preserves flags
     *pg |= time << 2; // updates time
   }
 

@@ -11,7 +11,7 @@
   /* Private functions */
   /*********************/
 
-  static void print_bin_aux(int n);
+  static void print_bin_aux (int n);
 
   /**********************/
   /* Exported functions */
@@ -46,7 +46,7 @@
   /* Private functions implementation */
   /************************************/
 
-  static void print_bin_aux(int n)
+  static void print_bin_aux (int n)
   {
     if( n == 0 ) return;
     print_bin_aux(n>>1);
