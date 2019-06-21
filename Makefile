@@ -5,10 +5,10 @@ CFLAGS = -w
 
 all: main testpg
 
-main: main.o page.o
-	$(CC) $(DEBUG) -o main main.o page.o $(CFLAGS)
+main: main.o page.o utils.o
+	$(CC) $(DEBUG) -o main main.o page.o utils.o $(CFLAGS)
 
-main.o: main.c page.h
+main.o: main.c page.h utils.h
 	$(CC) $(DEBUG) -o main.o main.c -c $(CFLAGS)
 
 page.o: page.c page.h
@@ -19,6 +19,9 @@ testpg: test_page.o page.o
 
 test_page.o: test_page.c page.h
 	$(CC) $(DEBUG) -o test_page.o test_page.c -c $(CFLAGS)
+
+utils.o: utils.c utils.h
+	$(CC) $(DEBUG) -o utils.o utils.c -c $(CFLAGS)
 
 clean:
 	# Deletes binaries and objects

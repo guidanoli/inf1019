@@ -4,10 +4,10 @@
 
   #include <stdio.h>
   #include <stdlib.h>
-  #include <stdarg.h>
   #include <string.h>
   #include <unistd.h>
   #include "page.h"
+  #include "utils.h"
 
   #define PARAMS "<program> <algorithm> <log path> <page size> <total size>"
 
@@ -21,14 +21,7 @@
   /* Static functions */
   /********************/
 
-  // core functionality
   static int get_s (int page_size);
-
-  // utils
-  static int fatal_error (const char * err_msg_format, ...);
-  static int is_power_of_two (int n);
-  static void print_bin (int n);
-  static void print_bin_aux(int n);
 
   /********************/
   /* Global variables */
@@ -86,21 +79,6 @@
   /* Functions implementation */
   /****************************/
 
-  // Indicates an error through stderr output
-  // err_msg_format - format, just like in printf
-  // ... - arguments, just like in printf
-  // > EXIT_FAILURE
-  static int fatal_error (const char * err_msg_format, ...)
-  {
-    va_list vl;
-    va_start(vl, err_msg_format);
-    fprintf(stderr, "\033[1;31m");
-    vfprintf(stderr,err_msg_format, vl);
-    fprintf(stderr, "\033[0m");
-    va_end(vl);
-    return EXIT_FAILURE;
-  }
-
   // Calculate s (shift done in physical address
   // to obtain logical address)
   // page_size - page size, in KB
@@ -115,34 +93,4 @@
       s++;
     }
     return s;
-  }
-
-  // Check if n = 2^m, m being a natural number
-  // n - number
-  // > 0, 1
-  static int is_power_of_two (int n)
-  {
-    if( n <= 0 ) return 0;
-    while( (n & 1) == 0 ) n >>= 1;
-    return n == 1;
-  }
-
-  // Print number in binary notation plus new line
-  // n - number
-  // > (in stdout) binary representation of n
-  static void print_bin (int n)
-  {
-    print_bin_aux(n);
-    if( n == 0 ) printf("0");
-    printf("\n");
-  }
-
-  // Print number in binary notation except 0
-  // n - number
-  // > (in stdout) binary representation of n
-  static void print_bin_aux(int n)
-  {
-    if( n == 0 ) return;
-    print_bin_aux(n>>1);
-    printf("%d",n&1);
   }
