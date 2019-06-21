@@ -7,7 +7,7 @@
 
   int main ( void )
   {
-    page pg = 0;
+    page_t pg = 0;
 
     // Initialized values are all zero
     assert(page_get_framenum(pg)==0);
