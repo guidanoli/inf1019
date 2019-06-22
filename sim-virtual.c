@@ -9,7 +9,10 @@
   #include "page.h"
   #include "utils.h"
 
-  #define PARAMS "<program> <algorithm> <log path> <page size> <total size> [-D]"
+  #define ARGS "<program> <algorithm> <log path> <page size> <total size> [-D]"
+  #define ALG_INIT() alg_init[(int) algorithm]()
+  #define ALG_ACCESS(pgid,rw) alg_access[(int) algorithm]((unsigned int)pgid,(rw_t)rw)
+  #define ALG_DESTROY(p) alg_destroy[(int) algorithm](p)
 
   typedef enum {
     NRU,
@@ -33,26 +36,45 @@
   /********************/
 
   static int get_s (int page_size);
-  static access_t nru (unsigned int page_index, rw_t rw);
-  static access_t lru (unsigned int page_index, rw_t rw);
-  static access_t novo (unsigned int page_index, rw_t rw);
+  static void page_table_init (unsigned int s);
+  static void page_table_destroy ();
+  static int safe_fatal_error ();
+
+  static void nru_init ();
+  static void lru_init ();
+  static void novo_init ();
+
+  static void nru_destroy (page_t * page);
+  static void lru_destroy (page_t * page);
+  static void novo_destroy (page_t * page);
+
+  static access_t nru_access (unsigned int page_index, rw_t rw);
+  static access_t lru_access (unsigned int page_index, rw_t rw);
+  static access_t novo_access (unsigned int page_index, rw_t rw);
 
   /********************/
   /* Global variables */
   /********************/
 
   char debug;
+  FILE * fp;
 
   algorithm_t algorithm = -1;
-  access_t (*algorithm_functions[3])(unsigned int,rw_t) = {nru,lru,novo};
-  const char * algorithm_names[3] = {"NRU","LRU","NOVO"};
+  access_t (* alg_access[3])(unsigned int,rw_t) = {nru_access,lru_access,novo_access};
+  void (* alg_init[3])() = {nru_init,lru_init,novo_init};
+  void (* alg_destroy[3])(void *) = {nru_destroy,lru_destroy,novo_destroy};
+  const char * alg_name[3] = {"NRU","LRU","NOVO"};
 
-  unsigned int time = 0;
-  unsigned int faults_cnt = 0;
-  unsigned int dirty_cnt = 0;
+  unsigned int time = 0;        // time counter
+  unsigned int faults_cnt = 0;  // #pages that caused page fault
+  unsigned int dirty_cnt = 0;   // #pages written back to memory
 
-  int page_size; // in KB
-  int total_size; // in MB
+  unsigned int page_cnt;        // #pages in page table
+  unsigned int max_page_cnt;    // #pages in memory
+  unsigned int page_size;       // page size in KB
+  unsigned int total_size;      // memory size in MB
+
+  page_t * page_table;
 
   /********/
   /* Main */
@@ -61,8 +83,8 @@
   int main (int argc, char ** argv)
   {
     // Arguments validation
-    if( argc != 5 && argc != 6 ) return fatal_error("Invalid parameters.\nExpected: %s\n", PARAMS);
-    for(int i = 0 ; i < 3; i++) if( !strcmp(argv[1],algorithm_names[i]) ) algorithm = (algorithm_t) i;
+    if( argc != 5 && argc != 6 ) return fatal_error("Invalid parameters.\nExpected: %s\n", ARGS);
+    for( int i = 0 ; i < 3; i++ ) if( !strcmp(argv[1],alg_name[i]) ) algorithm = (algorithm_t) i;
     if( algorithm == -1 ) return fatal_error("Invalid algorithm.\nValid values: LRU, NRU, NOVO\n");
     if( access(argv[2],F_OK) == -1 ) return fatal_error("File %s does not exist.\n",argv[2]);
     if( (page_size = atoi(argv[3])) <= 0 ) return fatal_error("Invalid page size\n");
@@ -79,22 +101,23 @@
     unsigned int addr;
     unsigned int s = get_s(page_size);
     char rw;
-    FILE * fp;
 
+    page_table_init(s);
     // File processing and algorithm calling
     if( (fp = fopen(argv[2],"r")) == NULL ) return fatal_error("Could not read file %s.\n",argv[2]);
     while ( (ret = fscanf(fp, "%x %c ", &addr, &rw)) == 2 )
     {
       unsigned int page_index = addr >> s;
       if( rw >= 'a' && rw <= 'z' ) rw -= ('a' - 'A'); // to upper case
-      if( !(rw == READ || rw == WRITE) ) return fatal_error("Bad argument at line %d.\n",time+1);
-      access_t access = algorithm_functions[(int) algorithm](page_index,(rw_t)rw);
+      if( !(rw == READ || rw == WRITE) ) return safe_fatal_error();
+      access_t access = ALG_ACCESS(page_index,rw);
       if( access & PAGE_FAULT ) faults_cnt++;
       if( access & PAGE_DIRTY ) dirty_cnt++;
       time++;
     }
     fclose(fp);
-    if( ret != EOF ) return fatal_error("Bad file formating at line %d.\n",time+1);
+    page_table_destroy();
+    if( ret != EOF ) return fatal_error("Bad file formating at line %u.\n",time+1);
 
     return 0;
   }
@@ -103,22 +126,94 @@
   /* Functions implementation */
   /****************************/
 
-  static access_t nru (unsigned int page_index, rw_t rw)
+    /***************************/
+    /* NRU - Not Recently Used */
+    /***************************/
+
+  static void nru_init ()
+  {
+
+  }
+
+  static void nru_destroy (page_t * page)
+  {
+
+  }
+
+  static access_t nru_access (unsigned int page_index, rw_t rw)
   {
     printf("%u %c\n",page_index,rw);
     return PAGE_HIT; // TEMP
   }
 
-  static access_t lru (unsigned int page_index, rw_t rw)
+    /*****************************/
+    /* LRU - Least Recently Used */
+    /*****************************/
+
+  static void lru_init ()
+  {
+
+  }
+
+  static void lru_destroy (page_t * page)
+  {
+
+  }
+
+  static access_t lru_access (unsigned int page_index, rw_t rw)
   {
 
     return PAGE_HIT; // TEMP
   }
 
-  static access_t novo (unsigned int page_index, rw_t rw)
+    /******************/
+    /* NOVO - Optimal */
+    /******************/
+
+  static void novo_init ()
+  {
+
+  }
+
+  static void novo_destroy (page_t * page)
+  {
+
+  }
+
+  static access_t novo_access (unsigned int page_index, rw_t rw)
   {
 
     return PAGE_HIT; // TEMP
+  }
+
+    /***************************************/
+    /* General functions for any algorithm */
+    /***************************************/
+
+  static int safe_fatal_error ()
+  {
+    fclose(fp);
+    page_table_destroy();
+    return fatal_error("Bad argument at line %u.\n",time+1);
+  }
+
+  static void page_table_init (unsigned int s)
+  {
+    page_cnt = 1 << (32 - s);
+    page_table = (page_t *) malloc( sizeof(page_t) * page_cnt );
+    if( page_table == NULL )
+    {
+      fatal_error("Could not allocate memory to page table.\n");
+      exit(1);
+    }
+    for( int i = 0; i < page_cnt; i++ ) page_table[i].flags = 0;
+    ALG_INIT();
+  }
+
+  static void page_table_destroy ()
+  {
+    for( int i = 0; i < page_cnt; i++ ) ALG_DESTROY(&page_table[i]);
+    free(page_table);
   }
 
   // Calculate s (shift done in physical address
