@@ -8,6 +8,8 @@
 
   static unsigned char SRAND_CALLED = 0;
 
+  typedef struct node_s * lnode;
+
   struct node_s {
     lnode next;
     void * info;
@@ -78,6 +80,11 @@
   list_ret list_rand(plist head, void ** info)
   {
     if( !head || !info ) return LIST_PARAM;
+    if( list_empty(head) == LIST_EMPTY )
+    {
+      *info = NULL;
+      return LIST_EMPTY;
+    }
     call_srand();
     int r = rand() % head->count;
     lnode temp = head->first;

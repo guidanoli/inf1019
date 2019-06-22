@@ -95,6 +95,7 @@
     // random item
     fatal_assert(list_create(&h)!=LIST_MEM);
     uaux = 10;
+    assert(list_rand(h,&paux)==LIST_EMPTY);
     fatal_assert(list_ins(h,&uaux,NULL)!=LIST_MEM);
     assert(list_rand(h,&paux)==LIST_OK);
     assert(paux==&uaux);
@@ -102,7 +103,7 @@
 
     // random item in a certain range
     fatal_assert(list_create(&h)!=LIST_MEM);
-    for(int i = 64 ; i < 128; i++)
+    for(char i = 'a' ; i <= 'z'; i++)
     {
       char * c = (char *) malloc(sizeof(char));
       *c = i;
@@ -111,7 +112,7 @@
     assert(list_rand(h,&paux)==LIST_OK);
     caux = *((char *)paux);
     printmsg("Chosen character: %c\n",caux);
-    assert(caux >= 64 && caux < 128);
+    assert(caux >= 'a' && caux <= 'z');
     assert(list_destroy(&h)==LIST_OK);
 
     show_log();
