@@ -6,6 +6,7 @@
   #include <stdlib.h>
   #include <stdarg.h>
   #include "utils.h"
+  #include "colours.h"
 
   /*********************/
   /* Private functions */

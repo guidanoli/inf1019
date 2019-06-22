@@ -111,7 +111,7 @@
     }
     assert(list_rand(h,&paux)==LIST_OK);
     caux = *((char *)paux);
-    printmsg("Chosen character: %c\n",caux);
+    printmsg("INFO",CYAN,"Chosen character: %c\n",caux);
     assert(caux >= 'a' && caux <= 'z');
     assert(list_destroy(&h)==LIST_OK);
 

@@ -7,12 +7,16 @@
   #include <string.h>
   #include <unistd.h>
   #include "page.h"
+  #include "list.h"
   #include "utils.h"
 
   #define ARGS "<program> <algorithm> <log path> <page size> <total size> [-D]"
-  #define ALG_INIT() alg_init[(int) algorithm]()
-  #define ALG_ACCESS(pgid,rw) alg_access[(int) algorithm]((unsigned int)pgid,(rw_t)rw)
-  #define ALG_DESTROY(p) alg_destroy[(int) algorithm](p)
+  #define ALG_INIT()          alg_init[algorithm]     ()
+  #define ALG_FAULT(p)        alg_fault[algorithm]    (p)
+  #define ALG_UPDATE(p)       alg_update[algorithm]   (p)
+  #define ALG_DESTROY(p)      alg_destroy[algorithm]  (p)
+
+  #define NRU_CYCLES 32
 
   typedef enum {
     NRU,
@@ -25,32 +29,31 @@
     WRITE = (int) 'W',
   } rw_t;
 
-  typedef enum {
-    PAGE_HIT = 0b0,
-    PAGE_FAULT = 0b1,
-    PAGE_DIRTY = 0b10,
-  } access_t;
-
   /********************/
   /* Static functions */
   /********************/
 
   static int get_s (int page_size);
+  static unsigned int get_present_page_count();
   static void page_table_init (unsigned int s);
   static void page_table_destroy ();
-  static int safe_fatal_error ();
+  static int safe_fatal_error (const char * errmsg);
 
   static void nru_init ();
   static void lru_init ();
   static void novo_init ();
 
+  static void nru_update (page_t * page);
+  static void lru_update (page_t * page);
+  static void novo_update (page_t * page);
+
+  static page_t * nru_fault (page_t * page);
+  static page_t * lru_fault (page_t * page);
+  static page_t * novo_fault (page_t * page);
+
   static void nru_destroy (page_t * page);
   static void lru_destroy (page_t * page);
   static void novo_destroy (page_t * page);
-
-  static access_t nru_access (unsigned int page_index, rw_t rw);
-  static access_t lru_access (unsigned int page_index, rw_t rw);
-  static access_t novo_access (unsigned int page_index, rw_t rw);
 
   /********************/
   /* Global variables */
@@ -60,8 +63,9 @@
   FILE * fp;
 
   algorithm_t algorithm = -1;
-  access_t (* alg_access[3])(unsigned int,rw_t) = {nru_access,lru_access,novo_access};
   void (* alg_init[3])() = {nru_init,lru_init,novo_init};
+  page_t * (* alg_fault[3])(page_t * page) = {nru_fault,lru_fault,novo_fault};
+  void (* alg_update[3])(page_t * page) = {nru_update,lru_update,novo_update};
   void (* alg_destroy[3])(void *) = {nru_destroy,lru_destroy,novo_destroy};
   const char * alg_name[3] = {"NRU","LRU","NOVO"};
 
@@ -69,10 +73,10 @@
   unsigned int faults_cnt = 0;  // #pages that caused page fault
   unsigned int dirty_cnt = 0;   // #pages written back to memory
 
-  unsigned int page_cnt;        // #pages in page table
-  unsigned int max_page_cnt;    // #pages in memory
+  unsigned int table_size;      // #pages in page table
   unsigned int page_size;       // page size in KB
   unsigned int total_size;      // memory size in MB
+  unsigned int max_page_cnt;    // maximum number of pages
 
   page_t * page_table;
 
@@ -95,6 +99,7 @@
     if( !is_power_of_two(total_size) ) return fatal_error("Total size must be a power of 2.\n");
     if( argc == 6 ) debug = strcmp(argv[5],"-D") == 0;
 
+    max_page_cnt = (total_size << 10) / page_size;
     if( debug ) printf("[DEBUG MODE]\n");
 
     int ret;
@@ -102,17 +107,73 @@
     unsigned int s = get_s(page_size);
     char rw;
 
+    int debug_iterations = 0;
+
     page_table_init(s);
     // File processing and algorithm calling
     if( (fp = fopen(argv[2],"r")) == NULL ) return fatal_error("Could not read file %s.\n",argv[2]);
     while ( (ret = fscanf(fp, "%x %c ", &addr, &rw)) == 2 )
     {
+      // Debug iterative mode checker
+      if( debug )
+      {
+        if( debug_iterations == 0 )
+        {
+          printf(">>> Number of iterations: ");
+          if( scanf("%d", &debug_iterations) != 1 || debug_iterations <= 0)
+            debug_iterations = 1;
+        }
+        debug_iterations--;
+      }
+
+      // Page index calculation and r/w validation
       unsigned int page_index = addr >> s;
       if( rw >= 'a' && rw <= 'z' ) rw -= ('a' - 'A'); // to upper case
-      if( !(rw == READ || rw == WRITE) ) return safe_fatal_error();
-      access_t access = ALG_ACCESS(page_index,rw);
-      if( access & PAGE_FAULT ) faults_cnt++;
-      if( access & PAGE_DIRTY ) dirty_cnt++;
+      if( !(rw == READ || rw == WRITE) ) return safe_fatal_error("Bad r/w argument");
+      printf("# Access to %u for %s\n",page_index,rw==READ?"READING":"READING/WRITING");
+
+      // Page access
+      page_t * page = &page_table[page_index];
+      if( page_get_pflag(*page) )
+      {
+        if( debug ) printf("Page hit!\n");
+      }
+      else
+      {
+        if( debug ) printf("Page fault!\n");
+        if( get_present_page_count() < max_page_cnt )
+        {
+          if( debug ) printf("There is space for the page on memory!\n");
+        }
+        else
+        {
+          if( debug ) printf("There isn't space for the page on memory, so a victim will be evited!\n");
+
+          page_t * victim = ALG_FAULT(page);
+
+          // Victim page
+          page_set_pflag(victim,0);
+          page_set_rflag(victim,0);
+          if( page_get_mflag(*victim) ){
+            dirty_cnt++;
+            if( debug )
+              printf("The victim page was dirty and has been written in disk now!");
+          }
+          page_set_mflag(victim,0);
+        }
+
+        // Current page
+        page_set_pflag(page,1);
+        page_set_rflag(page,1);
+
+        faults_cnt++;
+      }
+      if( rw == WRITE )
+      {
+        page_set_mflag(page,1);
+        if( debug ) printf("The page has been modified!\n");
+      }
+      ALG_UPDATE(page);
       time++;
     }
     fclose(fp);
@@ -132,18 +193,85 @@
 
   static void nru_init ()
   {
+    // nothing
+  }
+
+  static page_t * nru_fault (page_t * page)
+  {
+    list_ret ret;
+    int best_victim = 0;
+    int best_class = 0;
+    plist victim_list;
+    if( (ret=list_create(&victim_list)) != LIST_OK )
+    {
+      safe_fatal_error("Could not allocate victim list.");
+      fatal_error("Received return value of %d\n",ret);
+      exit(1);
+    }
+
+    page_t * victim = page_table;
+    for( int i = 0; i < table_size ; i++ )
+    {
+      if( !page_get_pflag(*victim) ) continue;
+      int class = (page_get_rflag(*victim) << 1) | page_get_mflag(*victim);
+      if( class > best_class )
+      {
+        list_empty(victim_list);
+        best_class = class;
+      }
+
+      if( class == best_class )
+      {
+        if( (ret=list_ins(victim_list,victim,NULL)) != LIST_OK )
+        {
+          safe_fatal_error("Could not insert node to victim list.");
+          fatal_error("Received return value of %d\n",ret);
+          exit(1);
+        }
+      }
+      victim++;
+    }
+
+    if( debug )
+    {
+      unsigned int count;
+      if( (ret=list_count(victim_list,&count)) != LIST_OK )
+      {
+        safe_fatal_error("Could not get count from victim list");
+        fatal_error("Received return value of %d\n",ret);
+        exit(1);
+      }
+      printf("There are %u possible pages to be evicted.\n",count);
+    }
+
+    page_t * p_victim;
+    if( (ret=list_rand(victim_list,&p_victim)) != LIST_OK )
+    {
+      safe_fatal_error("Could not select random node from victim list");
+      fatal_error("Received return value of %d\n",ret);
+      exit(1);
+    }
+    return p_victim;
+  }
+
+  static void nru_update (page_t * page)
+  {
+    if( time % NRU_CYCLES == 0 )
+    {
+      page_t * temp = page_table;
+      for( int i = 0 ; i < table_size; i++ )
+      {
+        page_set_rflag(temp,0);
+        temp++;
+      }
+    }
+    page_set_rflag(page,1);
 
   }
 
   static void nru_destroy (page_t * page)
   {
-
-  }
-
-  static access_t nru_access (unsigned int page_index, rw_t rw)
-  {
-    printf("%u %c\n",page_index,rw);
-    return PAGE_HIT; // TEMP
+    // nothing
   }
 
     /*****************************/
@@ -152,18 +280,23 @@
 
   static void lru_init ()
   {
+    // nothing
+  }
 
+  static page_t * lru_fault (page_t * page)
+  {
+    // nothing
+    return NULL;
+  }
+
+  static void lru_update (page_t * page)
+  {
+    // nothing
   }
 
   static void lru_destroy (page_t * page)
   {
-
-  }
-
-  static access_t lru_access (unsigned int page_index, rw_t rw)
-  {
-
-    return PAGE_HIT; // TEMP
+    // nothing
   }
 
     /******************/
@@ -172,48 +305,61 @@
 
   static void novo_init ()
   {
+    // nothing
+  }
 
+  static page_t * novo_fault (page_t * page)
+  {
+    // nothing
+    return NULL;
+  }
+
+  static void novo_update (page_t * page)
+  {
+    // nothing
   }
 
   static void novo_destroy (page_t * page)
   {
-
-  }
-
-  static access_t novo_access (unsigned int page_index, rw_t rw)
-  {
-
-    return PAGE_HIT; // TEMP
+    // nothing
   }
 
     /***************************************/
     /* General functions for any algorithm */
     /***************************************/
 
-  static int safe_fatal_error ()
+  static int safe_fatal_error (const char * errmsg)
   {
     fclose(fp);
     page_table_destroy();
-    return fatal_error("Bad argument at line %u.\n",time+1);
+    return fatal_error("Error at line %u: %s\n",time+1,errmsg);
   }
 
   static void page_table_init (unsigned int s)
   {
-    page_cnt = 1 << (32 - s);
-    page_table = (page_t *) malloc( sizeof(page_t) * page_cnt );
+    table_size = 1 << (32 - s);
+    page_table = (page_t *) malloc( sizeof(page_t) * table_size );
     if( page_table == NULL )
     {
       fatal_error("Could not allocate memory to page table.\n");
       exit(1);
     }
-    for( int i = 0; i < page_cnt; i++ ) page_table[i].flags = 0;
+    for( int i = 0; i < table_size; i++ ) page_table[i].flags = 0;
     ALG_INIT();
   }
 
   static void page_table_destroy ()
   {
-    for( int i = 0; i < page_cnt; i++ ) ALG_DESTROY(&page_table[i]);
+    for( int i = 0; i < table_size; i++ ) ALG_DESTROY(&page_table[i]);
     free(page_table);
+  }
+
+  static unsigned int get_present_page_count()
+  {
+    unsigned int count = 0;
+    for( int i = 0 ; i < table_size; i++ )
+      count += page_get_pflag(page_table[i]);
+    return count;
   }
 
   // Calculate s (shift done in physical address

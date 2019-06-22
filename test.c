@@ -6,16 +6,7 @@
   #include <string.h>
   #include <assert.h>
   #include <stdarg.h>
-
-  /***************/
-  /* Color codes */
-  /***************/
-
-  #define DEFAULT_COLOR "\033[0m"
-  #define RED "\033[0;31m"
-  #define GREEN "\033[0;32m"
-  #define YELLOW "\033[0;33m"
-  #define CYAN "\033[0;36m"
+  #include "test.h"
 
   /********************/
   /* Global variables */
@@ -74,9 +65,9 @@
     n_tests++;
   }
 
-  void printmsg(const char * msg, ...)
+  void printmsg(const char * tag, const char * color, const char * msg, ...)
   {
-    printcolor("MESSAGE",CYAN,"",0);
+    printcolor(tag,color,"",0);
     va_list vl;
     va_start(vl, msg);
     vfprintf(stdout,msg,vl);
@@ -89,9 +80,9 @@
 
   static void printcolor(const char * tag, const char * color, const char * msg, int newline)
   {
-    printf(DEFAULT_COLOR);  printf("[");
+    printf(DEFAULT_COLOUR);  printf("[");
     printf(color);          printf(tag);
-    printf(DEFAULT_COLOR);  printf("] %s%s",msg,newline?"\n":"");
+    printf(DEFAULT_COLOUR);  printf("] %s%s",msg,newline?"\n":"");
   }
 
   static void printerror(const char * msg)

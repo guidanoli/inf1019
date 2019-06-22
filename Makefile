@@ -5,10 +5,10 @@ CFLAGS = -w
 
 all: sim-virtual t.page t.utils t.list
 
-sim-virtual: sim-virtual.o page.o utils.o
-	$(CC) $(DEBUG) -o sim-virtual sim-virtual.o page.o utils.o $(CFLAGS)
+sim-virtual: sim-virtual.o page.o utils.o list.o
+	$(CC) $(DEBUG) -o sim-virtual sim-virtual.o page.o utils.o list.o $(CFLAGS)
 
-sim-virtual.o: sim-virtual.c page.h utils.h
+sim-virtual.o: sim-virtual.c page.h utils.h list.h
 	$(CC) $(DEBUG) -o sim-virtual.o sim-virtual.c -c $(CFLAGS)
 
 page.o: page.c page.h
@@ -20,7 +20,7 @@ t.page: t.page.o test.o page.o
 t.page.o: t.page.c test.h page.h
 	$(CC) $(DEBUG) -o t.page.o t.page.c -c $(CFLAGS)
 
-utils.o: utils.c utils.h
+utils.o: utils.c utils.h colours.h
 	$(CC) $(DEBUG) -o utils.o utils.c -c $(CFLAGS)
 
 t.utils: t.utils.o test.o utils.o
@@ -38,7 +38,7 @@ t.list.o: t.list.c test.h list.h
 list.o: list.c list.h
 	$(CC) $(DEBUG) -o list.o list.c -c $(CFLAGS)
 
-test.o: test.c test.h
+test.o: test.c test.h colours.h
 	$(CC) $(DEBUG) -o test.o test.c -c $(CFLAGS)
 
 clean:
