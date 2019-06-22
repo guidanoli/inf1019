@@ -23,6 +23,11 @@
   #define assert(statement); assertcolor(statement,#statement,__LINE__);
   void assertcolor(int boolean, const char * label, const line);
 
+  // Prints message to screen properly formatted
+  // msg, ... - format string and parameters like printf
+  // > (to stdout) message
+  void printmsg(const char * msg, ...);
+
   // Ouputs information stored in counters at a given time
   // > (to stdout) test log
   void show_log();

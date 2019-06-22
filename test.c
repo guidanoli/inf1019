@@ -5,6 +5,7 @@
   #include <stdio.h>
   #include <string.h>
   #include <assert.h>
+  #include <stdarg.h>
 
   /***************/
   /* Color codes */
@@ -14,6 +15,7 @@
   #define RED "\033[0;31m"
   #define GREEN "\033[0;32m"
   #define YELLOW "\033[0;33m"
+  #define CYAN "\033[0;36m"
 
   /********************/
   /* Global variables */
@@ -26,9 +28,8 @@
   /* Private functions */
   /*********************/
 
-  static void printcolor(const char * tag, const char * color, const char * msg);
+  static void printcolor(const char * tag, const char * color, const char * msg, int newline);
   static void printerror(const char * msg);
-  static void printmsg(const char * msg);
   static void printsuccess(const char * msg);
 
   /**********************/
@@ -48,10 +49,10 @@
   {
     char msg[256];
     sprintf(msg,"%d asserts",n_tests);
-    printcolor("LOG",YELLOW,msg);
+    printcolor("LOG",YELLOW,msg,1);
     if( n_failed == 0 ) sprintf(msg,"No errors found");
     else sprintf(msg,"%d error%s found",n_failed,n_failed==1?"":"s");
-    printcolor("LOG",YELLOW,msg);
+    printcolor("LOG",YELLOW,msg,1);
   }
 
   void assertcolor(int boolean, const char * label, const line)
@@ -73,29 +74,33 @@
     n_tests++;
   }
 
+  void printmsg(const char * msg, ...)
+  {
+    printcolor("MESSAGE",CYAN,"",0);
+    va_list vl;
+    va_start(vl, msg);
+    vfprintf(stdout,msg,vl);
+    va_end(vl);
+  }
+
   /************************************/
   /* Private functions implementation */
   /************************************/
 
-  static void printcolor(const char * tag, const char * color, const char * msg)
+  static void printcolor(const char * tag, const char * color, const char * msg, int newline)
   {
     printf(DEFAULT_COLOR);  printf("[");
     printf(color);          printf(tag);
-    printf(DEFAULT_COLOR);  printf("] %s\n",msg);
+    printf(DEFAULT_COLOR);  printf("] %s%s",msg,newline?"\n":"");
   }
 
   static void printerror(const char * msg)
   {
-    printcolor("ERROR",RED,msg);
+    printcolor("ERROR",RED,msg,1);
     n_failed++;
-  }
-
-  static void printmsg(const char * msg)
-  {
-    printcolor("MSG",DEFAULT_COLOR,msg);
   }
 
   static void printsuccess(const char * msg)
   {
-    printcolor("SUCCESS",GREEN,msg);
+    printcolor("SUCCESS",GREEN,msg,1);
   }

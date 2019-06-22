@@ -9,7 +9,7 @@
   int main ( void )
   {
     page_t * pg = (page_t *) malloc(sizeof(page_t));
-    fatal_assert(pg) 
+    fatal_assert(pg); 
 
     // Initialized values are all zero
     assert(!page_get_mflag(*pg));
