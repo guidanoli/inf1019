@@ -23,7 +23,7 @@
 
   static void call_srand();
 
-  list_ret list_create(plist * phead) {
+  list_ret list_create (plist * phead) {
     if( !phead ) return LIST_PARAM;
     plist head = (plist) malloc(sizeof(struct head_s));
     if( !head ) return LIST_MEM;
@@ -33,30 +33,26 @@
     return LIST_OK;
   }
 
-  list_ret list_destroy(plist * phead) {
+  list_ret list_destroy (plist * phead) {
     if( !phead ) return LIST_PARAM;
     plist head = *phead;
     if( !head ) return LIST_OK;
     lnode node = head->first;
-    while( node ) {
-      lnode temp = node->next;
-      if( node->del_func ) node->del_func(node->info);
-      free(node);
-      node = temp;
-    }
+    list_ret ret = list_empty(head);
+    if( ret != LIST_OK ) return ret;
     free(head);
     *phead = NULL;
     return LIST_OK;
   }
 
-  list_ret list_count(plist head, unsigned int * count)
+  list_ret list_count (plist head, unsigned int * count)
   {
     if( !head || !count ) return LIST_PARAM;
     *count = head->count;
     return LIST_OK;
   }
 
-  list_ret list_empty(plist head)
+  list_ret list_isempty (plist head)
   {
     int count;
     list_ret ret = list_count(head,&count);
@@ -64,7 +60,7 @@
     return count == 0 ? LIST_EMPTY : LIST_NOT_EMPTY;
   }
 
-  list_ret list_ins(plist head, void * info, void * delete_info(void *))
+  list_ret list_ins (plist head, void * info, void * delete_info(void *))
   {
     if( !head || !info ) return LIST_PARAM;
     lnode node = (lnode) malloc(sizeof(struct node_s));
@@ -77,10 +73,10 @@
     return LIST_OK;
   }
 
-  list_ret list_rand(plist head, void ** info)
+  list_ret list_rand (plist head, void ** info)
   {
     if( !head || !info ) return LIST_PARAM;
-    if( list_empty(head) == LIST_EMPTY )
+    if( list_isempty(head) == LIST_EMPTY )
     {
       *info = NULL;
       return LIST_EMPTY;
@@ -95,6 +91,22 @@
       r--;
     }
     *info = temp->info;
+    return LIST_OK;
+  }
+
+  list_ret list_empty (plist head)
+  {
+    if( !head ) return LIST_PARAM;
+    if( list_isempty(head) == LIST_EMPTY ) return LIST_OK;
+    lnode node = head->first;
+    while( node ) {
+      lnode temp = node->next;
+      if( node->del_func ) node->del_func(node->info);
+      free(node);
+      node = temp;
+    }
+    head->count = 0;
+    head->first = NULL;
     return LIST_OK;
   }
 

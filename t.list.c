@@ -32,7 +32,7 @@
     assert(list_count(NULL,&uaux)==LIST_PARAM);
     assert(list_count(h,NULL)==LIST_PARAM);
     assert(list_count(NULL,NULL)==LIST_PARAM);
-    assert(list_empty(NULL)==LIST_PARAM);
+    assert(list_isempty(NULL)==LIST_PARAM);
     assert(list_ins(NULL,NULL,NULL)==LIST_PARAM);
     assert(list_ins(h,NULL,NULL)==LIST_PARAM);
     assert(list_ins(NULL,&uaux,NULL)==LIST_PARAM);
@@ -44,7 +44,7 @@
     fatal_assert(list_create(&h)!=LIST_MEM);
     assert(list_count(h,&uaux)==LIST_OK);
     assert(uaux==0);
-    assert(list_empty(h)==LIST_EMPTY);
+    assert(list_isempty(h)==LIST_EMPTY);
     assert(list_destroy(&h)==LIST_OK);
 
     // one node
@@ -52,7 +52,7 @@
     fatal_assert(list_ins(h,&uaux,delfunc)!=LIST_MEM);
     assert(list_count(h,&uaux)==LIST_OK);
     assert(uaux==1);
-    assert(list_empty(h)==LIST_NOT_EMPTY);
+    assert(list_isempty(h)==LIST_NOT_EMPTY);
     assert(list_destroy(&h)==LIST_OK);
 
     // del func
@@ -113,6 +113,14 @@
     caux = *((char *)paux);
     printmsg("Chosen character: %c\n",caux);
     assert(caux >= 'a' && caux <= 'z');
+    assert(list_destroy(&h)==LIST_OK);
+
+    // emptying list
+    fatal_assert(list_create(&h)!=LIST_MEM);
+    for(int i = 0 ; i < 10; i++)
+      fatal_assert(list_ins(h,malloc(sizeof(char)),free)!=LIST_MEM);
+    assert(list_empty(h)==LIST_OK);
+    assert(list_isempty(h)==LIST_EMPTY);
     assert(list_destroy(&h)==LIST_OK);
 
     show_log();
