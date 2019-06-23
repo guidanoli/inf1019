@@ -354,11 +354,22 @@
   static void show_statistics ()
   {
     hourglass_stop();
-    int s = hourglass_seconds();
+    double s = hourglass_total();
     int m = hourglass_minutes();
-    printc("Simulator",CYAN,"Number of page faults: %u\n",faults_cnt);
-    printc("Simulator",CYAN,"Number of pages written: %u\n",dirty_cnt);
-    printc("Simulator",CYAN,"Done in %02dm %02ds.\n",m,s);
+    int h = hourglass_hours();
+    float fperc = (float)faults_cnt*100/(float)tcounter;
+    float dperc = (float)dirty_cnt*100/(float)tcounter;
+    double tperaccess = s/(double)tcounter;
+    char magnitude;
+    if( tperaccess >= 1 ) { magnitude = ' '; }
+    else if( tperaccess >= 1e-3 ) { magnitude = 'm'; tperaccess *= 1e3; }
+    else if( tperaccess >= 1e-6 ) { magnitude = 'u'; tperaccess *= 1e6; }
+    else if( tperaccess >= 1e-9 ) { magnitude = 'n'; tperaccess *= 1e9; }
+    else { magnitude = 'p'; tperaccess *= 1e12; } // Almost impossible
+
+    printc("Simulator",CYAN,"Number of page faults: %u (%.2f%%)\n",faults_cnt,fperc);
+    printc("Simulator",CYAN,"Number of pages written: %u (%.2f%%)\n",dirty_cnt,dperc);
+    printc("Simulator",CYAN,"Done in %02d:%02d:%02.4lf (%.1lf%cs/access).\n",h,m,s,tperaccess,magnitude);
   }
 
   // Calculate s (shift done in physical address

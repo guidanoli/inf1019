@@ -13,31 +13,29 @@
   [Simulator] Physic Memory size: 16
   [Simulator] Page size: 8
   [Simulator] Page Replacement Algorithm: NRU
-  [Simulator] Number of page faults: 2544
-  [Simulator] Number of pages written: 496
-  [Simulator] Done in 00m 05s.
+  [Simulator] Number of page faults: 2540 (0.25%)
+  [Simulator] Number of pages written: 492 (0.05%)
+  [Simulator] Done in 00:00:5.9505 (6.0us/access).
 
-  $ ./sim-virtual NRU compilador.log 8 8
+  $ ./sim-virtual NRU compilador.log 16 16
   [Simulator] Executing...
   [Simulator] Input file: compilador.log
-  [Simulator] Physic Memory size: 8
-  [Simulator] Page size: 8
+  [Simulator] Physic Memory size: 16
+  [Simulator] Page size: 16
   [Simulator] Page Replacement Algorithm: NRU
-  [Simulator] Number of page faults: 19597
-  [Simulator] Number of pages written: 16572
-  [Simulator] Done in 01m 16s.
+  [Simulator] Number of page faults: 12120 (1.21%)
+  [Simulator] Number of pages written: 10223 (1.02%)
+  [Simulator] Done in 00:00:24.3136 (24.3us/access).
 
-  $ ./sim-virtual NRU compilador.log 8 1
+  $ ./sim-virtual NRU compilador.log 32 16
   [Simulator] Executing...
   [Simulator] Input file: compilador.log
-  [Simulator] Physic Memory size: 1
-  [Simulator] Page size: 8
+  [Simulator] Physic Memory size: 16
+  [Simulator] Page size: 32
   [Simulator] Page Replacement Algorithm: NRU
-  [Simulator] Number of page faults: 85980
-  [Simulator] Number of pages written: 47693
-  [Simulator] Done in 05m 42s.
-
-  (Imagine com 1 MB de memória e páginas de 32 KB...)
+  [Simulator] Number of page faults: 24065 (2.41%)
+  [Simulator] Number of pages written: 20350 (2.04%)
+  [Simulator] Done in 00:00:23.0291 (23.0us/access).
 
   Percebe-se que com um número maior de páginas na memória principal,
   o algoritmo NRU é mais eficiente. Como o número de páginas em memória

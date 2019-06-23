@@ -12,42 +12,48 @@
   }
 
   void see_clock() {
-    printc("CLOCK",CYAN,"It's %02d:%02d.\n",
-    hourglass_minutes(),hourglass_seconds());
+    printc("CLOCK",CYAN,"It's %02d:%02d:%02d.\n",
+    hourglass_hours(),hourglass_minutes(),hourglass_seconds());
   }
 
   int main ( void )
   {
-    int s;
+    double s;
 
     // Initial state
     assert(hourglass_seconds()==0);
     assert(hourglass_minutes()==0);
+    assert(hourglass_hours()==0);
+    assert(hourglass_total()==0.0);
 
     // It was not even started yet
     hourglass_stop();
     assert(hourglass_seconds()==0);
     assert(hourglass_minutes()==0);
+    assert(hourglass_hours()==0);
+    assert(hourglass_total()==0.0);
     see_clock();
 
     // Begin hourglass
     hourglass_begin();
     assert(hourglass_seconds()==0);
     assert(hourglass_minutes()==0);
+    assert(hourglass_hours()==0);
+    assert(hourglass_total()==0.0);
     see_clock();
 
     work();
 
     // Stop hourglass
     hourglass_stop();
-    assert((s=hourglass_seconds())>0);
+    assert((s=hourglass_total())>0.0);
     see_clock();
 
     work();
 
     // Stop hourglass
     hourglass_stop();
-    assert(s==hourglass_seconds());
+    assert(s==hourglass_total());
     see_clock();
 
     // Do double work
@@ -57,7 +63,7 @@
     work();
 
     hourglass_stop();
-    assert(s<hourglass_seconds());
+    assert(s<hourglass_total());
     see_clock();
 
     show_log();

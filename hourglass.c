@@ -7,7 +7,7 @@
 
   static clock_t start = -1;
   static clock_t end = -1;
-  static double elapsed_time = 0;
+  static double elapsed_time = 0.0d;
   static char state = 0;
 
   static void update_elapsed_time();
@@ -27,14 +27,24 @@
     state = 0;
   }
 
-  int hourglass_seconds ()
+  unsigned int hourglass_seconds ()
   {
-    return ((int) elapsed_time) % 60;
+    return ((unsigned int) elapsed_time) % 60;
   }
 
-  int hourglass_minutes()
+  unsigned int hourglass_minutes ()
   {
-    return (int) (elapsed_time / 60);
+    return (unsigned int) (elapsed_time / 60) % 60;
+  }
+
+  unsigned int hourglass_hours ()
+  {
+    return (unsigned int) (elapsed_time / 3600);
+  }
+
+  double hourglass_total ()
+  {
+    return elapsed_time;
   }
 
   static void update_elapsed_time()
