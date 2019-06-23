@@ -7,6 +7,7 @@
   #include <string.h>
   #include <unistd.h>
   #include <signal.h>
+  #include <time.h>
   #include "page.h"
   #include "list.h"
   #include "utils.h"
@@ -16,9 +17,9 @@
   #define ALG_INIT()          alg_init[algorithm]     ()
   #define ALG_FAULT(p)        alg_fault[algorithm]    (p)
   #define ALG_UPDATE(p)       alg_update[algorithm]   (p)
-  #define ALG_DESTROY(p)      alg_destroy[algorithm]  (p)
+  #define ALG_DESTROY()       alg_destroy[algorithm]  ()
 
-  #define NRU_CYCLES 32
+  #define NRU_CYCLES 0x10000000
 
   typedef enum {
     NRU,
@@ -55,9 +56,9 @@
   static page_t * lru_fault (page_t * page);
   static page_t * novo_fault (page_t * page);
 
-  static void nru_destroy (page_t * page);
-  static void lru_destroy (page_t * page);
-  static void novo_destroy (page_t * page);
+  static void nru_destroy ();
+  static void lru_destroy ();
+  static void novo_destroy ();
 
   /********************/
   /* Global variables */
@@ -70,10 +71,13 @@
   void (* alg_init[3])() = {nru_init,lru_init,novo_init};
   page_t * (* alg_fault[3])(page_t * page) = {nru_fault,lru_fault,novo_fault};
   void (* alg_update[3])(page_t * page) = {nru_update,lru_update,novo_update};
-  void (* alg_destroy[3])(void *) = {nru_destroy,lru_destroy,novo_destroy};
+  void (* alg_destroy[3])() = {nru_destroy,lru_destroy,novo_destroy};
   const char * alg_name[3] = {"NRU","LRU","NOVO"};
 
-  unsigned int time = 0;        // time counter
+  int * nru_victims = NULL;
+  int nru_victims_cnt = 0;
+
+  unsigned int tcounter = 0;        // time counter
   unsigned int faults_cnt = 0;  // #pages that caused page fault
   unsigned int dirty_cnt = 0;   // #pages written back to memory
 
@@ -104,6 +108,7 @@
     if( argc == 6 ) debug = strcmp(argv[5],"-D") == 0;
 
     if (signal(SIGINT, sig_handler) == SIG_ERR) return fatal_error("Can't catch SIGINT.\n");
+    srand(time(NULL));
 
     max_page_cnt = (total_size << 10) / page_size;
     if( debug ) printc("Simulator",CYAN,"Executing on debug mode...\n");
@@ -186,7 +191,7 @@
         if( debug ) printc("Page",YELLOW,"The page has been modified!\n");
       }
       ALG_UPDATE(page);
-      time++;
+      tcounter++;
     }
     fclose(fp);
     page_table_destroy();
@@ -206,22 +211,14 @@
 
   static void nru_init ()
   {
-    // nothing
+    nru_victims = (int *) malloc ( sizeof(int) * max_page_cnt );
   }
 
   static page_t * nru_fault (page_t * page)
   {
-    list_ret ret;
     int best_victim = 0;
     int best_class = 0;
-    plist victim_list;
-
-    if( (ret=list_create(&victim_list)) != LIST_OK )
-    {
-      safe_fatal_error("Could not allocate victim list.");
-      fatal_error("Received return value of %d\n",ret);
-      exit(1);
-    }
+    nru_victims_cnt = 0;
 
     for( int i = 0; i < table_size ; i++ )
     {
@@ -230,49 +227,25 @@
       int class = (page_get_rflag(victim) << 1) | page_get_mflag(victim);
       if( class > best_class )
       {
-        list_empty(victim_list);
+        nru_victims_cnt = 0;
         best_class = class;
       }
       if( class == best_class )
       {
-        if( (ret=list_ins(victim_list,&page_table[i],NULL)) != LIST_OK )
-        {
-          safe_fatal_error("Could not insert node to victim list.");
-          fatal_error("Received return value of %d\n",ret);
-          exit(1);
-        }
+        nru_victims[nru_victims_cnt] = i;
+        nru_victims_cnt++;
       }
     }
 
-    if( debug )
-    {
-      unsigned int count;
-      if( (ret=list_count(victim_list,&count)) != LIST_OK )
-      {
-        safe_fatal_error("Could not get count from victim list");
-        fatal_error("Received return value of %d\n",ret);
-        exit(1);
-      }
-      printc("NRU",MAGENTA,"There are %u possible pages to be evicted.\n",count);
-    }
+    if( debug ) printc("NRU",MAGENTA,"There are %u possible pages to be evicted.\n",nru_victims_cnt);
 
-    page_t * p_victim;
-
-    if( (ret=list_rand(victim_list,&p_victim)) != LIST_OK )
-    {
-      safe_fatal_error("Could not select random node from victim list");
-      fatal_error("Received return value of %d\n",ret);
-      exit(1);
-    }
-
-    list_destroy(&victim_list);
-
-    return p_victim;
+    int index = rand() % nru_victims_cnt;
+    return page_table + nru_victims[index];
   }
 
   static void nru_update (page_t * page)
   {
-    if( time % NRU_CYCLES == 0 )
+    if( tcounter % NRU_CYCLES == 0 )
     {
       page_t * temp = page_table;
       for( int i = 0 ; i < table_size; i++ )
@@ -282,12 +255,11 @@
       }
     }
     page_set_rflag(page,1);
-
   }
 
-  static void nru_destroy (page_t * page)
+  static void nru_destroy ()
   {
-    // nothing
+    free(nru_victims);
   }
 
     /*****************************/
@@ -310,7 +282,7 @@
     // nothing
   }
 
-  static void lru_destroy (page_t * page)
+  static void lru_destroy ()
   {
     // nothing
   }
@@ -335,7 +307,7 @@
     // nothing
   }
 
-  static void novo_destroy (page_t * page)
+  static void novo_destroy ()
   {
     // nothing
   }
@@ -367,7 +339,7 @@
 
   static void page_table_destroy ()
   {
-    for( int i = 0; i < table_size; i++ ) ALG_DESTROY(&page_table[i]);
+    ALG_DESTROY();
     free(page_table);
   }
 
