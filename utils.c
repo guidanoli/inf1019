@@ -43,6 +43,17 @@
     printf("\n");
   }
 
+  void printc(const char * tag, const char * color, const char * msg, ...)
+  {
+    printf(DEFAULT_COLOUR); printf("[");
+    printf(color);          printf(tag);
+    printf(DEFAULT_COLOUR); printf("] ");
+    va_list vl;
+    va_start(vl, msg);
+    vfprintf(stdout,msg,vl);
+    va_end(vl);
+  }
+
   /************************************/
   /* Private functions implementation */
   /************************************/

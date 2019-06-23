@@ -6,9 +6,11 @@
   #include <stdlib.h>
   #include <string.h>
   #include <unistd.h>
+  #include <signal.h>
   #include "page.h"
   #include "list.h"
   #include "utils.h"
+  #include "hourglass.h"
 
   #define ARGS "<program> <algorithm> <log path> <page size> <total size> [-D]"
   #define ALG_INIT()          alg_init[algorithm]     ()
@@ -34,10 +36,12 @@
   /********************/
 
   static int get_s (int page_size);
-  static unsigned int get_present_page_count();
+  static unsigned int get_present_page_count ();
   static void page_table_init (unsigned int s);
   static void page_table_destroy ();
   static int safe_fatal_error (const char * errmsg);
+  static void show_statistics ();
+  void sig_handler(int signo);
 
   static void nru_init ();
   static void lru_init ();
@@ -99,8 +103,15 @@
     if( !is_power_of_two(total_size) ) return fatal_error("Total size must be a power of 2.\n");
     if( argc == 6 ) debug = strcmp(argv[5],"-D") == 0;
 
+    if (signal(SIGINT, sig_handler) == SIG_ERR) return fatal_error("Can't catch SIGINT.\n");
+
     max_page_cnt = (total_size << 10) / page_size;
-    if( debug ) printf("[DEBUG MODE]\n");
+    if( debug ) printc("Simulator",CYAN,"Executing on debug mode...\n");
+    else printc("Simulator",CYAN,"Executing...\n");
+    printc("Simulator",CYAN,"Input file: %s\n",argv[2]);
+    printc("Simulator",CYAN,"Physic Memory size: %u\n",total_size);
+    printc("Simulator",CYAN,"Page size: %u\n",page_size);
+    printc("Simulator",CYAN,"Page Replacement Algorithm: %s\n",argv[1]);
 
     int ret;
     unsigned int addr;
@@ -109,6 +120,7 @@
 
     int debug_iterations = 0;
 
+    hourglass_begin();
     page_table_init(s);
     // File processing and algorithm calling
     if( (fp = fopen(argv[2],"r")) == NULL ) return fatal_error("Could not read file %s.\n",argv[2]);
@@ -119,7 +131,7 @@
       {
         if( debug_iterations == 0 )
         {
-          printf(">>> Number of iterations: ");
+          printc("Debug",GREEN,">>> Number of iterations: ");
           if( scanf("%d", &debug_iterations) != 1 || debug_iterations <= 0)
             debug_iterations = 1;
         }
@@ -130,24 +142,25 @@
       unsigned int page_index = addr >> s;
       if( rw >= 'a' && rw <= 'z' ) rw -= ('a' - 'A'); // to upper case
       if( !(rw == READ || rw == WRITE) ) return safe_fatal_error("Bad r/w argument");
-      printf("# Access to %u for %s\n",page_index,rw==READ?"READING":"READING/WRITING");
+
+      if( debug ) printc("Page",YELLOW,"Access to %u for %s\n",page_index,rw==READ?"R":"R/W");
 
       // Page access
       page_t * page = &page_table[page_index];
       if( page_get_pflag(*page) )
       {
-        if( debug ) printf("Page hit!\n");
+        if( debug ) printc("Page",YELLOW,"Page hit!\n");
       }
       else
       {
-        if( debug ) printf("Page fault!\n");
+        if( debug ) printc("Page",YELLOW,"Page fault!\n");
         if( get_present_page_count() < max_page_cnt )
         {
-          if( debug ) printf("There is space for the page on memory!\n");
+          if( debug ) printc("Page",YELLOW,"There is space for the page on memory!\n");
         }
         else
         {
-          if( debug ) printf("There isn't space for the page on memory, so a victim will be evited!\n");
+          if( debug ) printc("Page",YELLOW,"There isn't space for the page on memory, so a victim will be evited!\n");
 
           page_t * victim = ALG_FAULT(page);
 
@@ -156,8 +169,7 @@
           page_set_rflag(victim,0);
           if( page_get_mflag(*victim) ){
             dirty_cnt++;
-            if( debug )
-              printf("The victim page was dirty and has been written in disk now!");
+            if( debug ) printc("Page",YELLOW,"The victim page was dirty and has been written in disk now!\n");
           }
           page_set_mflag(victim,0);
         }
@@ -171,13 +183,14 @@
       if( rw == WRITE )
       {
         page_set_mflag(page,1);
-        if( debug ) printf("The page has been modified!\n");
+        if( debug ) printc("Page",YELLOW,"The page has been modified!\n");
       }
       ALG_UPDATE(page);
       time++;
     }
     fclose(fp);
     page_table_destroy();
+    show_statistics();
     if( ret != EOF ) return fatal_error("Bad file formating at line %u.\n",time+1);
 
     return 0;
@@ -202,6 +215,7 @@
     int best_victim = 0;
     int best_class = 0;
     plist victim_list;
+
     if( (ret=list_create(&victim_list)) != LIST_OK )
     {
       safe_fatal_error("Could not allocate victim list.");
@@ -209,27 +223,25 @@
       exit(1);
     }
 
-    page_t * victim = page_table;
     for( int i = 0; i < table_size ; i++ )
     {
-      if( !page_get_pflag(*victim) ) continue;
-      int class = (page_get_rflag(*victim) << 1) | page_get_mflag(*victim);
+      page_t victim = page_table[i];
+      if( !page_get_pflag(victim) ) continue;
+      int class = (page_get_rflag(victim) << 1) | page_get_mflag(victim);
       if( class > best_class )
       {
         list_empty(victim_list);
         best_class = class;
       }
-
       if( class == best_class )
       {
-        if( (ret=list_ins(victim_list,victim,NULL)) != LIST_OK )
+        if( (ret=list_ins(victim_list,&page_table[i],NULL)) != LIST_OK )
         {
           safe_fatal_error("Could not insert node to victim list.");
           fatal_error("Received return value of %d\n",ret);
           exit(1);
         }
       }
-      victim++;
     }
 
     if( debug )
@@ -241,16 +253,20 @@
         fatal_error("Received return value of %d\n",ret);
         exit(1);
       }
-      printf("There are %u possible pages to be evicted.\n",count);
+      printc("NRU",MAGENTA,"There are %u possible pages to be evicted.\n",count);
     }
 
     page_t * p_victim;
+
     if( (ret=list_rand(victim_list,&p_victim)) != LIST_OK )
     {
       safe_fatal_error("Could not select random node from victim list");
       fatal_error("Received return value of %d\n",ret);
       exit(1);
     }
+
+    list_destroy(&victim_list);
+
     return p_victim;
   }
 
@@ -332,6 +348,7 @@
   {
     fclose(fp);
     page_table_destroy();
+    show_statistics();
     return fatal_error("Error at line %u: %s\n",time+1,errmsg);
   }
 
@@ -354,12 +371,22 @@
     free(page_table);
   }
 
-  static unsigned int get_present_page_count()
+  static unsigned int get_present_page_count ()
   {
     unsigned int count = 0;
     for( int i = 0 ; i < table_size; i++ )
       count += page_get_pflag(page_table[i]);
     return count;
+  }
+
+  static void show_statistics ()
+  {
+    hourglass_stop();
+    int s = hourglass_seconds();
+    int m = hourglass_minutes();
+    printc("Simulator",CYAN,"Number of page faults: %u\n",faults_cnt);
+    printc("Simulator",CYAN,"Number of pages written: %u\n",dirty_cnt);
+    printc("Simulator",CYAN,"Done in %02dm %02ds.\n",m,s);
   }
 
   // Calculate s (shift done in physical address
@@ -376,4 +403,11 @@
       s++;
     }
     return s;
+  }
+
+  void sig_handler(int signo)
+  {
+    printf("\n"); // jumps a line
+    safe_fatal_error("The program has been interrupted safely.");
+    exit(1);
   }

@@ -1,0 +1,50 @@
+
+  Guilherme Dantas
+
+  Análise do desempenho de cada algoritmo de substituição:
+
+  == NRU (Not Recently Used)
+
+  Para o arquivo compilador.log:
+
+  --> Páginas de 32 KB
+  $ ./sim-virtual NRU compilador.log 32 16
+  [Simulator] Executing...
+  [Simulator] Input file: compilador.log
+  [Simulator] Physic Memory size: 16
+  [Simulator] Page size: 32
+  [Simulator] Page Replacement Algorithm: NRU
+  [Simulator] Number of page faults: 307437
+  [Simulator] Number of pages written: 71747
+  [Simulator] Done in 05m 14s.
+
+  --> Páginas de 8 KB
+  $ ./sim-virtual NRU compilador.log 8 16
+  [Simulator] Executing...
+  [Simulator] Input file: compilador.log
+  [Simulator] Physic Memory size: 16
+  [Simulator] Page size: 8
+  [Simulator] Page Replacement Algorithm: NRU
+  [Simulator] Number of page faults: 14091
+  [Simulator] Number of pages written: 5185
+  [Simulator] Done in 01m 49s.
+
+  --> Memória com 1 MB
+  $ ./sim-virtual NRU compilador.log 8 1
+  [Simulator] Executing...
+  [Simulator] Input file: compilador.log
+  [Simulator] Physic Memory size: 1
+  [Simulator] Page size: 8
+  [Simulator] Page Replacement Algorithm: NRU
+  [Simulator] Number of page faults: 634245
+  [Simulator] Number of pages written: 99065
+  [Simulator] Done in 43m 07s.
+
+  (Imagine com 1 MB de memória e páginas de 32 KB...)
+
+  Percebe-se que com um número maior de páginas na memória principal,
+  o algoritmo NRU é mais eficiente. Como o número de páginas em memória
+  principal é calculado pela razão do tamanho da memória pelo tamanho de
+  uma página, pode-se ver que a complexidade do algoritmo NRU para esta
+  implementação é diretamente proporcional ao tamanho da página e inver-
+  samente proporcional ao tamanho da memória.

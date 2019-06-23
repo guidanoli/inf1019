@@ -81,7 +81,7 @@
       *info = NULL;
       return LIST_EMPTY;
     }
-    call_srand();
+    // call_srand();
     int r = rand() % head->count;
     lnode temp = head->first;
     while( r )

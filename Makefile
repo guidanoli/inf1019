@@ -3,10 +3,10 @@
 
 CFLAGS = -w
 
-all: sim-virtual t.page t.utils t.list
+all: sim-virtual t.page t.utils t.list t.hourglass
 
-sim-virtual: sim-virtual.o page.o utils.o list.o
-	$(CC) $(DEBUG) -o sim-virtual sim-virtual.o page.o utils.o list.o $(CFLAGS)
+sim-virtual: sim-virtual.o page.o utils.o list.o hourglass.o
+	$(CC) $(DEBUG) -o sim-virtual sim-virtual.o page.o utils.o list.o hourglass.o $(CFLAGS)
 
 sim-virtual.o: sim-virtual.c page.h utils.h list.h
 	$(CC) $(DEBUG) -o sim-virtual.o sim-virtual.c -c $(CFLAGS)
@@ -29,10 +29,10 @@ t.utils: t.utils.o test.o utils.o
 t.utils.o: t.utils.c test.h utils.h
 	$(CC) $(DEBUG) -o t.utils.o t.utils.c -c $(CFLAGS)
 
-t.list: t.list.o test.o list.o
-	$(CC) $(DEBUG) -o t.list t.list.o test.o list.o $(CFLAGS)
+t.list: t.list.o test.o list.o utils.o
+	$(CC) $(DEBUG) -o t.list t.list.o test.o list.o utils.o $(CFLAGS)
 
-t.list.o: t.list.c test.h list.h
+t.list.o: t.list.c test.h list.h utils.h
 	$(CC) $(DEBUG) -o t.list.o t.list.c -c $(CFLAGS)
 
 list.o: list.c list.h
@@ -40,6 +40,15 @@ list.o: list.c list.h
 
 test.o: test.c test.h colours.h
 	$(CC) $(DEBUG) -o test.o test.c -c $(CFLAGS)
+
+t.hourglass: t.hourglass.o test.o hourglass.o utils.o
+	$(CC) $(DEBUG) -o t.hourglass t.hourglass.o test.o hourglass.o utils.o $(CFLAGS)
+
+t.hourglass.o: t.hourglass.c test.h hourglass.h utils.h
+	$(CC) $(DEBUG) -o t.hourglass.o t.hourglass.c -c $(CFLAGS)
+
+hourglass.o: hourglass.c hourglass.h
+	$(CC) $(DEBUG) -o hourglass.o hourglass.c -c $(CFLAGS)
 
 clean:
 	# Deletes binaries and objects

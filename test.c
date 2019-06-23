@@ -19,7 +19,7 @@
   /* Private functions */
   /*********************/
 
-  static void printcolor(const char * tag, const char * color, const char * msg, int newline);
+  static void printcolor(const char * tag, const char * color, const char * msg);
   static void printerror(const char * msg);
   static void printsuccess(const char * msg);
 
@@ -40,10 +40,10 @@
   {
     char msg[256];
     sprintf(msg,"%d asserts",n_tests);
-    printcolor("LOG",YELLOW,msg,1);
+    printcolor("LOG",YELLOW,msg);
     if( n_failed == 0 ) sprintf(msg,"No errors found");
     else sprintf(msg,"%d error%s found",n_failed,n_failed==1?"":"s");
-    printcolor("LOG",YELLOW,msg,1);
+    printcolor("LOG",YELLOW,msg);
   }
 
   void assertcolor(int boolean, const char * label, const line)
@@ -65,33 +65,24 @@
     n_tests++;
   }
 
-  void printmsg(const char * tag, const char * color, const char * msg, ...)
-  {
-    printcolor(tag,color,"",0);
-    va_list vl;
-    va_start(vl, msg);
-    vfprintf(stdout,msg,vl);
-    va_end(vl);
-  }
-
   /************************************/
   /* Private functions implementation */
   /************************************/
 
-  static void printcolor(const char * tag, const char * color, const char * msg, int newline)
+  static void printcolor(const char * tag, const char * color, const char * msg)
   {
     printf(DEFAULT_COLOUR);  printf("[");
     printf(color);          printf(tag);
-    printf(DEFAULT_COLOUR);  printf("] %s%s",msg,newline?"\n":"");
+    printf(DEFAULT_COLOUR);  printf("] %s\n",msg);
   }
 
   static void printerror(const char * msg)
   {
-    printcolor("ERROR",RED,msg,1);
+    printcolor("ERROR",RED,msg);
     n_failed++;
   }
 
   static void printsuccess(const char * msg)
   {
-    printcolor("SUCCESS",GREEN,msg,1);
+    printcolor("SUCCESS",GREEN,msg);
   }

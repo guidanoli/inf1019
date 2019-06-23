@@ -5,6 +5,7 @@
   #include <stdlib.h>
   #include "test.h"
   #include "list.h"
+  #include "utils.h"
 
   int sum = 0;
 
@@ -111,7 +112,7 @@
     }
     assert(list_rand(h,&paux)==LIST_OK);
     caux = *((char *)paux);
-    printmsg("INFO",CYAN,"Chosen character: %c\n",caux);
+    printc("INFO",CYAN,"Chosen character: %c\n",caux);
     assert(caux >= 'a' && caux <= 'z');
     assert(list_destroy(&h)==LIST_OK);
 
