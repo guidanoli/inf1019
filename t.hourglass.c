@@ -2,7 +2,6 @@
   // Hourglass module test
   // Guilherme Dantas
 
-  #include <unistd.h>
   #include "hourglass.h"
   #include "test.h"
   #include "utils.h"
