@@ -8,6 +8,7 @@
   #include <unistd.h>
   #include <signal.h>
   #include <time.h>
+  #include <limits.h>
   #include "page.h"
   #include "list.h"
   #include "utils.h"
@@ -44,18 +45,24 @@
   static void show_statistics ();
   void sig_handler(int signo);
 
+  // Initializes data structures
   static void nru_init ();
   static void lru_init ();
   static void novo_init ();
 
+  // Updates page info when accessed
   static void nru_update (page_t * page);
   static void lru_update (page_t * page);
   static void novo_update (page_t * page);
 
+  // Page fault (replacement algorithm)
+  // When there isn't space in momory
+  // Returns victim
   static page_t * nru_fault (page_t * page);
   static page_t * lru_fault (page_t * page);
   static page_t * novo_fault (page_t * page);
 
+  // Destroys data structures
   static void nru_destroy ();
   static void lru_destroy ();
   static void novo_destroy ();
@@ -77,7 +84,7 @@
   int * nru_victims = NULL;
   int nru_victims_cnt = 0;
 
-  unsigned int tcounter = 0;        // time counter
+  unsigned long tcounter = 0;   // time counter
   unsigned int faults_cnt = 0;  // #pages that caused page fault
   unsigned int dirty_cnt = 0;   // #pages written back to memory
 
@@ -268,18 +275,30 @@
 
   static void lru_init ()
   {
-    // nothing
+    for( int i = 0; i < table_size; i++ ) page_table[i].info = (void *) 0;
   }
 
   static page_t * lru_fault (page_t * page)
   {
-    // nothing
-    return NULL;
+    unsigned long oldest_page_age = ULONG_MAX;
+    page_t * oldest_page = NULL;
+    for( int i = 0; i < table_size; i++ )
+    {
+      page_t * victim = page_table + i;
+      if( !page_get_pflag(*victim) ) continue;
+      unsigned long page_age = (unsigned long) victim->info;
+      if( page_age < oldest_page_age )
+      {
+        oldest_page_age = page_age;
+        oldest_page = victim;
+      }
+    }
+    return oldest_page;
   }
 
   static void lru_update (page_t * page)
   {
-    // nothing
+    page->info = (void *) tcounter;
   }
 
   static void lru_destroy ()
@@ -369,7 +388,7 @@
 
     printc("Simulator",CYAN,"Number of page faults: %u (%.2f%%)\n",faults_cnt,fperc);
     printc("Simulator",CYAN,"Number of pages written: %u (%.2f%%)\n",dirty_cnt,dperc);
-    printc("Simulator",CYAN,"Done in %02d:%02d:%02.4lf (%.1lf%cs/access).\n",h,m,s,tperaccess,magnitude);
+    printc("Simulator",CYAN,"Done in %02d:%02d:%02.4lf (%.1lf %cs/access).\n",h,m,s,tperaccess,magnitude);
   }
 
   // Calculate s (shift done in physical address
