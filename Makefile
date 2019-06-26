@@ -3,7 +3,7 @@
 
 CFLAGS = -w
 
-all: sim-virtual t.page t.utils t.hourglass t.queue
+all: sim-virtual t.page t.utils t.hourglass
 
 sim-virtual: sim-virtual.o page.o utils.o hourglass.o
 	$(CC) $(DEBUG) -o sim-virtual sim-virtual.o page.o utils.o hourglass.o $(CFLAGS)
@@ -40,15 +40,6 @@ t.hourglass.o: t.hourglass.c test.h hourglass.h utils.h
 
 hourglass.o: hourglass.c hourglass.h
 	$(CC) $(DEBUG) -o hourglass.o hourglass.c -c $(CFLAGS)
-
-t.queue: t.queue.o test.o queue.o
-	$(CC) $(DEBUG) -o t.queue t.queue.o test.o queue.o $(CFLAGS)
-
-t.queue.o: t.queue.c test.h queue.h
-	$(CC) $(DEBUG) -o t.queue.o t.queue.c -c $(CFLAGS)
-
-queue.o: queue.c queue.h
-	$(CC) $(DEBUG) -o queue.o queue.c -c $(CFLAGS)
 
 clear: clean
 	# alias

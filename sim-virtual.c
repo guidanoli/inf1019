@@ -8,7 +8,6 @@
   #include <unistd.h>
   #include <signal.h>
   #include <time.h>
-  #include <limits.h>
   #include "page.h"
   #include "utils.h"
   #include "hourglass.h"
@@ -19,7 +18,8 @@
   #define ALG_UPDATE(p)       alg_update[algorithm]   (p)
   #define ALG_DESTROY()       alg_destroy[algorithm]  ()
 
-  #define NRU_CYCLES 0x10000000
+  #define NRU_CYCLES 0x10000000         // 128 ticks/cycles
+  #define MAX_ULONG 0xFFFFFFFFFFFFFFFF  // From limits.h
 
   typedef enum {
     NRU,
@@ -38,7 +38,8 @@
 
   static int get_s (int page_size);
   static unsigned int get_present_page_count ();
-  static void page_table_init (unsigned int s);
+  static unsigned long get_accesses_count ();
+  static void page_table_init ();
   static void page_table_destroy ();
   static int safe_fatal_error (const char * errmsg);
   static void show_statistics ();
@@ -72,6 +73,8 @@
 
   char debug;
   FILE * fp;
+  char * filename;
+  unsigned long n_lines;
 
   algorithm_t algorithm = -1;
   void (* alg_init[3])() = {nru_init,lru_init,novo_init};
@@ -80,9 +83,14 @@
   void (* alg_destroy[3])() = {nru_destroy,lru_destroy,novo_destroy};
   const char * alg_name[3] = {"NRU","LRU","NOVO"};
 
+  // NRU
   int * nru_victims = NULL;
   int nru_victims_cnt = 0;
 
+  // NOVO
+  page_t * accesses;
+
+  unsigned int s;               // address shift
   unsigned long tcounter = 0;   // time counter
   unsigned int faults_cnt = 0;  // #pages that caused page fault
   unsigned int dirty_cnt = 0;   // #pages written back to memory
@@ -104,7 +112,7 @@
     if( argc != 5 && argc != 6 ) return fatal_error("Invalid parameters.\nExpected: %s\n", ARGS);
     for( int i = 0 ; i < 3; i++ ) if( !strcmp(argv[1],alg_name[i]) ) algorithm = (algorithm_t) i;
     if( algorithm == -1 ) return fatal_error("Invalid algorithm.\nValid values: LRU, NRU, NOVO\n");
-    if( access(argv[2],F_OK) == -1 ) return fatal_error("File %s does not exist.\n",argv[2]);
+    filename = argv[2]; if( access(filename,F_OK) == -1 ) return fatal_error("File %s does not exist.\n",filename);
     if( (page_size = atoi(argv[3])) <= 0 ) return fatal_error("Invalid page size\n");
     if( page_size < 8 || page_size > 32 ) return fatal_error("Page size must be between 8 and 32 KB.\n");
     if( !is_power_of_two(page_size) ) return fatal_error("Page size must be a power of 2.\n");
@@ -119,22 +127,22 @@
     max_page_cnt = (total_size << 10) / page_size;
     if( debug ) printc("Simulator",CYAN,"Executing on debug mode...\n");
     else printc("Simulator",CYAN,"Executing...\n");
-    printc("Simulator",CYAN,"Input file: %s\n",argv[2]);
+    printc("Simulator",CYAN,"Input file: %s\n",filename);
     printc("Simulator",CYAN,"Physic Memory size: %u\n",total_size);
     printc("Simulator",CYAN,"Page size: %u\n",page_size);
     printc("Simulator",CYAN,"Page Replacement Algorithm: %s\n",argv[1]);
 
     int ret;
     unsigned int addr;
-    unsigned int s = get_s(page_size);
     char rw;
 
     int debug_iterations = 0;
 
+    s = get_s(page_size);
     hourglass_begin();
-    page_table_init(s);
+    page_table_init();
     // File processing and algorithm calling
-    if( (fp = fopen(argv[2],"r")) == NULL ) return fatal_error("Could not read file %s.\n",argv[2]);
+    if( (fp = fopen(filename,"r")) == NULL ) return safe_fatal_error("Could not read file");
     while ( (ret = fscanf(fp, "%x %c ", &addr, &rw)) == 2 )
     {
       // Debug iterative mode checker
@@ -311,13 +319,52 @@
 
   static void novo_init ()
   {
-    // nothing
+    int ret;
+    unsigned int addr;
+    unsigned long simul_time = 0;
+    char rw;
+    n_lines = get_accesses_count();
+    accesses = (page_t **) malloc(sizeof(page_t *)*n_lines);
+    if( accesses == NULL )
+    {
+      safe_fatal_error("Could not allocate access vector.");
+      exit(1);
+    }
+    if( (fp = fopen(filename,"r")) == NULL ) { safe_fatal_error("Could not read file."); exit(1); }
+    while ( (ret = fscanf(fp, "%x %c ", &addr, &rw)) == 2 && simul_time < n_lines )
+    {
+      unsigned int page_index = addr >> s;
+      accesses[simul_time] = &page_table[page_index];
+      simul_time++;
+    }
+    fclose(fp);
+    if( ret != EOF ) { safe_fatal_error("Bad file formating."); exit(1); }
+    if( simul_time != n_lines - 1 ) printc("Warning",RED,"Unexpected number of lines in file.");
   }
 
   static page_t * novo_fault (page_t * page)
   {
-    // nothing
-    return NULL;
+    page_t * victim = page_table == page ? page_table + 1 : page_table; // Initializes
+    for( int i = 0 ; i < table_size; i++ ) page_table[i].info = 0; // info == found
+    unsigned long t = tcounter + 1;
+    unsigned int found_cnt = 0;
+    while( t < n_lines && found_cnt < max_page_cnt )
+    {
+      page_t * v = accesses[t];
+      if( !page_get_pflag(*v) || v->info ) continue;
+      acesses[t]->info = 1;
+      found_cnt++;
+      victim = v;
+    }
+    if( found_cnt != max_page_cnt )
+    {
+      for( int i = 0 ; i < table_size ; i++ )
+      {
+        if( !page_get_pflag(page_table[i]) ) continue;
+        if( !(page_table[i].info) ) return page_table + i;
+      }
+    }
+    return victim;
   }
 
   static void novo_update (page_t * page)
@@ -327,7 +374,7 @@
 
   static void novo_destroy ()
   {
-    // nothing
+    free(accesses);
   }
 
     /***************************************/
@@ -342,7 +389,7 @@
     return fatal_error("Error at line %u: %s\n",time+1,errmsg);
   }
 
-  static void page_table_init (unsigned int s)
+  static void page_table_init ()
   {
     table_size = 1 << (32 - s);
     page_table = (page_t *) malloc( sizeof(page_t) * table_size );
@@ -351,8 +398,25 @@
       fatal_error("Could not allocate memory to page table.\n");
       exit(1);
     }
-    for( int i = 0; i < table_size; i++ ) page_table[i].flags = 0;
+    for( int i = 0; i < table_size; i++ )
+    {
+      page_table[i].flags = 0;
+      page_table[i].info = NULL;
+    }
     ALG_INIT();
+  }
+
+  static unsigned long get_accesses_count ()
+  {
+    unsigned long count = 0;
+    if( (fp = fopen(filename,"r")) == NULL ) { safe_fatal_error("Could not read file."); exit(1); }
+    while ( (ret = fscanf(fp, "%x %c ", &addr, &rw)) == 2 )
+    {
+      count++;
+    }
+    fclose(fp);
+    if( ret != EOF ) { safe_fatal_error("Bad file formating."); exit(1);}
+    return count;
   }
 
   static void page_table_destroy ()
