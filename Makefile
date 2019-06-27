@@ -3,7 +3,9 @@
 
 CFLAGS = -w
 
-all: sim-virtual t.page t.utils t.hourglass
+all: sim-virtual tests
+
+tests: t.page t.utils t.hourglass
 
 sim-virtual: sim-virtual.o page.o utils.o hourglass.o
 	$(CC) $(DEBUG) -o sim-virtual sim-virtual.o page.o utils.o hourglass.o $(CFLAGS)

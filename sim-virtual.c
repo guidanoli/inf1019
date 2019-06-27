@@ -355,7 +355,6 @@
           t < n_lines && found_cnt < max_page_cnt;
           t++ )
     {
-      if( debug ) printc("Debug",GREEN,"Reading line %lu...\n",t);
       page_t * v = accesses[t];
       if( !page_get_pflag(*v) || v->info ) { continue; }
       accesses[t]->info = 1;
