@@ -339,19 +339,25 @@
     }
     fclose(fp);
     if( ret != EOF ) { safe_fatal_error("Bad file formating."); exit(1); }
-    if( simul_time != n_lines - 1 ) printc("Warning",RED,"Unexpected number of lines in file.");
+    if( simul_time != n_lines )
+    {
+      printc("Warning",RED,"Unexpected number of lines in file. Expected: %d Read: %d\n",
+      n_lines, simul_time);
+    }
   }
 
   static page_t * novo_fault (page_t * page)
   {
     page_t * victim = page_table == page ? page_table + 1 : page_table; // Initializes
     for( int i = 0 ; i < table_size; i++ ) page_table[i].info = 0; // info == found
-    unsigned long t = tcounter + 1;
     unsigned int found_cnt = 0;
-    while( t < n_lines && found_cnt < max_page_cnt )
+    for(  unsigned long t = tcounter + 1;
+          t < n_lines && found_cnt < max_page_cnt;
+          t++ )
     {
+      if( debug ) printc("Debug",GREEN,"Reading line %lu...\n",t);
       page_t * v = accesses[t];
-      if( !page_get_pflag(*v) || v->info ) continue;
+      if( !page_get_pflag(*v) || v->info ) { continue; }
       accesses[t]->info = 1;
       found_cnt++;
       victim = v;
