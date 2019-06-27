@@ -1,0 +1,116 @@
+
+$center$$underline$Trabalho 2 - Algoritmos de substituição de páginas
+
+$right$Guilherme Dantas
+$right$1713155
+
+$line$
+
+Arquivos no diretório:
+
+colours.h           interface de cores
+hourglass.c         fonte do módulo de ampulheta
+hourglass.h         interface do módulo de ampulheta
+Makefile            arquivo Make
+page.c              fonte do módulo de página
+page.h              inferface do módulo de página
+results_graph.png   gráfico dos resultados
+results_table.png   tabela dos resultados
+sim-virtual.c       módulo principal (simulador)
+t.hourglass.c       teste do módulo de ampulheta
+t.page.c            teste do módulo de página
+t.utils.c           teste do módulo de utilidades
+T2-Guilherme.txt    este documento
+test.c              fonte do módulo de testes
+test.h              interface do módulo de testes
+utils.c             fonte do módulo de utilidades
+utils.h             interface do módulo de utilidades
+
+$line$
+
+$center$$underline$Estrutura geral
+
+O simulador possui uma parte genérica e outra específica.
+A parte específica depende do algoritmo escolhido pelo primeiro
+parâmetro passado ao programa. Ela tratará das estruturas de
+dados condizentes com o algoritmo de substituição de páginas
+selecionado, nas seguintes ocasiões:
+
+- Inicialização - inicializar estruturas de dados
+- Page Fault    - encontrar página a ser substituída
+- Atualização   - atualizar informações de página acessada
+- Destruição    - destruir estruturas de dados
+
+Um algoritmo não precisa necessariamente implementar alguma
+funcionalidade para cada uma dessas ocasiões. Em questão de
+implementação, estas "ocasiões" se traduzem na chamada de
+uma função num vetor de ponteiros para funções. O algoritmo
+selecionado se traduz num índice que acessa a função daquele
+algoritmo.
+
+$line$
+
+$center$$underline$NRU
+
+- Inicialização: Alocado vetor para cada página possível,
+que armazenará os candidatos a "vítima" de substuição quando
+ocorre um Page Fault.
+
+- Page Fault: Identifica os melhores candidatos a vítima (menor
+classe de prioridade possível), os põe no vetor de candidatos a
+vítimas. A vítima é escolhida aleatoriamente dentre os candidatos.
+
+- Atualização: Zera a flag R a cada ciclo. Seta 1 a flag R da
+página acessada.
+
+- Destruição: Desaloca vetor de candidatos a vítima.
+
+$line$
+
+$center$$underline$LRU
+
+- Inicialização: Atribui a cada página da tabela de páginas no
+campo "informação", o valor 0. A semântica deste campo genérico
+neste algoritmo é de "idade". Este campo é encarado como um
+unsigned long, portanto, não precisa ser reiniciado de tempos em
+tempos, pois o maior valor assumido é muito maior que a quantidade
+de linhas dos arquivos de simulação.
+
+- Page Fault: É escolhida a página mais velha da memória principal.
+
+- Atualização: Atribui ao campo de idade da página acessada o valor
+do contador que é incrementado a cada nova linha lida (tempo).
+
+- Destruição: Nada.
+
+$line$
+
+$center$$underline$NOVO (Ótimo)
+
+- Inicialização: É alocado um vetor do tamanho do arquivo (#linhas),
+e armazenado na i-ésima posição o índice da página acessada no tempo
+i. Erros de formatação do arquivo podem ser levantados nessa etapa.
+
+- Page Fault: Escolhe a página que está em memória que mais tardiamente
+será acessada. Caso houver páginas em memória que nunca mais serão
+acessadas, é escolhida a primeira nesta categoria.
+
+- Atualização: Nada.
+
+- Destruição: Desaloca vetor de histórico de acessos.
+
+$line$
+
+$center$$underline$Análise de Desempenho
+
+Como pode-se ver pelas imagens neste diretório que dizem respeito dos
+resultados da simulação, visivelmente pode-se ver que:
+
+$center$NOVO > LRU > NRU (em performance)
+
+Estes resultados se basearam nas estatísticas levantadas pelo simulador
+para cada algoritmo, para cada arquivo de simulação, usando a configuração
+de páginas de 8K e tamanho da memória principal igual a 16MB - ou seja -
+a configuração com melhor performance.
+
+
