@@ -3,7 +3,7 @@
 
 CFLAGS = -w
 
-all: sim-virtual tests
+all: sim-virtual
 
 tests: t.page t.utils t.hourglass
 
