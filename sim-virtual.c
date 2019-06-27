@@ -19,7 +19,7 @@
   #define ALG_DESTROY()       alg_destroy[algorithm]  ()
 
   #define NRU_CYCLES 0x10000000         // 128 ticks/cycles
-  #define MAX_ULONG 0xFFFFFFFFFFFFFFFF  // From limits.h
+  #define ULONG_MAX 0xFFFFFFFFFFFFFFFF  // From limits.h
 
   typedef enum {
     NRU,
@@ -88,7 +88,7 @@
   int nru_victims_cnt = 0;
 
   // NOVO
-  page_t * accesses;
+  page_t ** accesses;
 
   unsigned int s;               // address shift
   unsigned long tcounter = 0;   // time counter
@@ -334,7 +334,7 @@
     while ( (ret = fscanf(fp, "%x %c ", &addr, &rw)) == 2 && simul_time < n_lines )
     {
       unsigned int page_index = addr >> s;
-      accesses[simul_time] = &page_table[page_index];
+      accesses[simul_time] = page_table + page_index;
       simul_time++;
     }
     fclose(fp);
@@ -352,7 +352,7 @@
     {
       page_t * v = accesses[t];
       if( !page_get_pflag(*v) || v->info ) continue;
-      acesses[t]->info = 1;
+      accesses[t]->info = 1;
       found_cnt++;
       victim = v;
     }
@@ -408,6 +408,9 @@
 
   static unsigned long get_accesses_count ()
   {
+    int ret;
+    unsigned int addr;
+    char rw;
     unsigned long count = 0;
     if( (fp = fopen(filename,"r")) == NULL ) { safe_fatal_error("Could not read file."); exit(1); }
     while ( (ret = fscanf(fp, "%x %c ", &addr, &rw)) == 2 )
