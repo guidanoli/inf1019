@@ -9,13 +9,13 @@ $line$
 Arquivos no diretório:
 
 colours.h           interface de cores
+getresults.sh       script shell para gerar resultados
 hourglass.c         fonte do módulo de ampulheta
 hourglass.h         interface do módulo de ampulheta
 Makefile            arquivo Make
 page.c              fonte do módulo de página
 page.h              inferface do módulo de página
-results_graph.png   gráfico dos resultados
-results_table.png   tabela dos resultados
+results.txt         texto gerado pelo script shell
 sim-virtual.c       módulo principal (simulador)
 t.hourglass.c       teste do módulo de ampulheta
 t.page.c            teste do módulo de página
@@ -103,14 +103,80 @@ $line$
 
 $center$$underline$Análise de Desempenho
 
-Como pode-se ver pelas imagens neste diretório que dizem respeito dos
-resultados da simulação, visivelmente pode-se ver que:
+É possível ver nitidamente nas tabelas geradas pelo script, que há um
+algoritmo melhor que outro, em todos os casos de testes para os mesmos
+parâmetros (tamanho de página x arquivo).
 
-$center$NOVO > LRU > NRU (em performance)
+$center$NOVO é melhor que LRU, que é melhor que NRU
 
-Estes resultados se basearam nas estatísticas levantadas pelo simulador
-para cada algoritmo, para cada arquivo de simulação, usando a configuração
-de páginas de 8K e tamanho da memória principal igual a 16MB - ou seja -
-a configuração com melhor performance.
+Isto é, para as mesmas configurações de tamanho de página e programas
+acessando a memória, o algoritmo NOVO é o melhor, depois LRU, e, por
+fim, NRU - o que é um bom sinal, pois realmente esperava-se que O NOVO
+tivesse a melhor perfomance dos três em quaisquer circunstâncias.
+
+Já quanto ao número de falhas de página, não foi possível fazer uma
+relação global, pois varia demais, dependendo do arquivo. Ora aumenta
+o número de page faults ao aumentar o tamanho da página, ora diminui.
+Há vezes inclusive que este número oscila (LRU para compilador).
+Contudo, pode-se tentar explicar o por quê desta variação de PFs
+para dado tipo de programa.
+
+$line$
+
+$center$$underline$Compilador
+
+* NRU:  aumentou
+* LRU:  oscilou
+* NOVO: diminuiu
+
+Nenhum algoritmo se comportou da mesma forma.
+
+$line$
+
+$center$$underline$Compressor
+
+* NRU:  diminuiu
+* LRU:  diminuiu
+* NOVO: diminuiu
+
+Todos diminuiram. Interessante, porque este foi o único teste
+em que o número de páginas escritas foi zero para todos. Pode-se
+entender o compressor como um programa pequeno, ou, em outras
+palavras, um programa que acessa uma região de memória bem enxuta.
+Por isso, aumentar o número de páginas aumenta as chances de
+page hit, e, consequentemente, diminui as de page fault.
+
+$line$
+
+$center$$underline$Matriz
+
+* NRU:  aumentou
+* LRU:  diminuiu
+* NOVO: diminuiu
+
+
+
+$line$
+
+$center$$underline$Simulador
+
+* NRU:  aumentou
+* LRU:  diminuiu
+* NOVO: diminuiu
+
+$line$
+
+$center$$underline$Observações
+
+Para rodar o script shell, deve-se dar permissão ao mesmo com:
+
+@   chmod +x getresults.sh
+
+E deve-se ter Python3 instalado em máquina, sendo acessado pelo
+comando python3, senão, alterar chamada ao interpretador Python
+no código do script.
+
+
+
 
 
