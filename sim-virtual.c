@@ -18,7 +18,7 @@
   #define ALG_UPDATE(p)       alg_update[algorithm]   (p)
   #define ALG_DESTROY()       alg_destroy[algorithm]  ()
 
-  #define NRU_CYCLES 0x10000000         // 128 ticks/cycles
+  #define NRU_CYCLES 0x10000000000      // 1K ticks/cycles
   #define ULONG_MAX 0xFFFFFFFFFFFFFFFF  // From limits.h
 
   typedef enum {
