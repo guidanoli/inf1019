@@ -8,8 +8,9 @@ $line$
 
 Arquivos no diretório:
 
+autotable.py        script python para gerar tabela de resultados
 colours.h           interface de cores
-getresults.sh       script shell para gerar resultados
+getresults.sh       script shell para gerar resultados crus
 hourglass.c         fonte do módulo de ampulheta
 hourglass.h         interface do módulo de ampulheta
 Makefile            arquivo Make
@@ -117,52 +118,56 @@ tivesse a melhor perfomance dos três em quaisquer circunstâncias.
 Já quanto ao número de falhas de página, não foi possível fazer uma
 relação global, pois varia demais, dependendo do arquivo. Ora aumenta
 o número de page faults ao aumentar o tamanho da página, ora diminui.
-Há vezes inclusive que este número oscila (LRU para compilador).
+Há vezes inclusive em que este número oscila (LRU em compilador.log).
 Contudo, pode-se tentar explicar o por quê desta variação de PFs
 para dado tipo de programa.
 
-$line$
+$center$$underline$Página de tamanho 8 KB
 
-$center$$underline$Compilador
+@              |---------------|---------------|---------------|
+@              |      NRU      |      LRU      |      NOVO     |
+@              |---------------|---------------|---------------|
+@              |   PF  |   PW  |   PF  |   PW  |   PF  |   PW  |
+--------------|-------|-------|-------|-------|-------|-------|
+|   compilador|   2532|    484|   2391|    263|   2380|    128|
+|   compressor|    255|      0|    255|      0|    255|      0|
+|       matriz|   2230|    182|   2214|     74|   2205|     63|
+|    simulador|   3785|   1737|   3405|    997|   3371|    722|
+---------------------------------------------------------------
 
-* NRU:  aumentou
-* LRU:  oscilou
-* NOVO: diminuiu
+$center$$underline$Página de tamanho 16 KB
 
-Nenhum algoritmo se comportou da mesma forma.
+@              |---------------|---------------|---------------|
+@              |      NRU      |      LRU      |      NOVO     |
+@              |---------------|---------------|---------------|
+@              |   PF  |   PW  |   PF  |   PW  |   PF  |   PW  |
+--------------|-------|-------|-------|-------|-------|-------|
+|   compilador|  12234|  10316|   2215|    489|   1968|    414|
+|   compressor|    209|      0|    209|      0|    209|      0|
+|       matriz|   8885|   7753|   2011|    452|   1868|    390|
+|    simulador|  14325|  12629|   3155|   1316|   2872|   1087|
+---------------------------------------------------------------
 
-$line$
+$center$$underline$Página de tamanho 32 KB
 
-$center$$underline$Compressor
+@              |---------------|---------------|---------------|
+@              |      NRU      |      LRU      |      NOVO     |
+@              |---------------|---------------|---------------|
+@              |   PF  |   PW  |   PF  |   PW  |   PF  |   PW  |
+--------------|-------|-------|-------|-------|-------|-------|
+|   compilador|  23711|  20108|   3204|    766|   1974|    537|
+|   compressor|    172|      0|    172|      0|    172|      0|
+|       matriz|  24446|  23049|   1950|    636|   1606|    484|
+|    simulador|  24315|  22369|   2997|   1357|   2334|   1111|
+---------------------------------------------------------------
 
-* NRU:  diminuiu
-* LRU:  diminuiu
-* NOVO: diminuiu
-
-Todos diminuiram. Interessante, porque este foi o único teste
-em que o número de páginas escritas foi zero para todos. Pode-se
-entender o compressor como um programa pequeno, ou, em outras
-palavras, um programa que acessa uma região de memória bem enxuta.
-Por isso, aumentar o número de páginas aumenta as chances de
-page hit, e, consequentemente, diminui as de page fault.
-
-$line$
-
-$center$$underline$Matriz
-
-* NRU:  aumentou
-* LRU:  diminuiu
-* NOVO: diminuiu
-
-
-
-$line$
-
-$center$$underline$Simulador
-
-* NRU:  aumentou
-* LRU:  diminuiu
-* NOVO: diminuiu
+Contudo, pode-se observar alguns padrões:
+* O número de dirty pages (páginas escritas) sempre aumenta com o
+aumento do tamanho da página -
+* No algoritmo NOVO (ótimo), a tendência é o número de page faults
+diminuir com o aumento do tamanho da página.
+* Assim, no algoritmo NOVO, o número de page faults e dirty pages
+convergem.
 
 $line$
 
@@ -175,8 +180,5 @@ Para rodar o script shell, deve-se dar permissão ao mesmo com:
 E deve-se ter Python3 instalado em máquina, sendo acessado pelo
 comando python3, senão, alterar chamada ao interpretador Python
 no código do script.
-
-
-
-
-
+@
+@

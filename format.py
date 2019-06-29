@@ -71,7 +71,7 @@ keywords = {
   "underline": underline
 }
 
-filename, ext = os.path.splitext(input("Input (sem extensão): "))
+filename, ext = os.path.splitext(input("Input file: "))
 i = 0
 with open(filename+ext,encoding='utf8') as f:
   for l in f:
@@ -97,4 +97,4 @@ with open(filename+ext,encoding='utf8') as f:
 with open(filename+'_formatado'+ext,'w',encoding='utf8') as f:
   f.write(getstartingline()+'\n'+'\n'.join(lines)+'\n'+getendline())
 
-print("Saída em "+filename+'_formatado'+ext)
+print("Output in "+filename+'_formatado'+ext)
