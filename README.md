@@ -67,6 +67,6 @@ Since the log files are quite large and I avoid adding large files to the reposi
 
 ## Links
 
-[Seibel (*course supervisor*)](http://139.82.24.35/seibel/hp/)
-[Statement (*in Portuguese*)](https://drive.google.com/file/d/1fUyadkXQwtmSAcDa2FTxC0TYexYvmR2e/view?usp=sharing)
-[Log files (*for testing*)](https://drive.google.com/file/d/1s7By6hcJJ8N41QByLZVRp0rr6gXxdhQl/view?usp=sharing)
+* [Seibel (*course supervisor*)](http://139.82.24.35/seibel/hp/)
+* [Statement (*in Portuguese*)](https://drive.google.com/file/d/1fUyadkXQwtmSAcDa2FTxC0TYexYvmR2e/view?usp=sharing)
+* [Log files (*for testing*)](https://drive.google.com/file/d/1s7By6hcJJ8N41QByLZVRp0rr6gXxdhQl/view?usp=sharing)
