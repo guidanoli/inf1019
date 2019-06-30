@@ -24,7 +24,7 @@
   typedef enum {
     NRU,
     LRU,
-    NOVO,
+    OPT,
   } algorithm_t;
 
   typedef enum {
@@ -48,24 +48,24 @@
   // Initializes data structures
   static void nru_init ();
   static void lru_init ();
-  static void novo_init ();
+  static void opt_init ();
 
   // Updates page info when accessed
   static void nru_update (page_t * page);
   static void lru_update (page_t * page);
-  static void novo_update (page_t * page);
+  static void opt_update (page_t * page);
 
   // Page fault (replacement algorithm)
   // When there isn't space in momory
   // Returns victim
   static page_t * nru_fault (page_t * page);
   static page_t * lru_fault (page_t * page);
-  static page_t * novo_fault (page_t * page);
+  static page_t * opt_fault (page_t * page);
 
   // Destroys data structures
   static void nru_destroy ();
   static void lru_destroy ();
-  static void novo_destroy ();
+  static void opt_destroy ();
 
   /********************/
   /* Global variables */
@@ -77,17 +77,17 @@
   unsigned long n_lines;
 
   algorithm_t algorithm = -1;
-  void (* alg_init[3])() = {nru_init,lru_init,novo_init};
-  page_t * (* alg_fault[3])(page_t * page) = {nru_fault,lru_fault,novo_fault};
-  void (* alg_update[3])(page_t * page) = {nru_update,lru_update,novo_update};
-  void (* alg_destroy[3])() = {nru_destroy,lru_destroy,novo_destroy};
-  const char * alg_name[3] = {"NRU","LRU","NOVO"};
+  void (* alg_init[3])() = {nru_init,lru_init,opt_init};
+  page_t * (* alg_fault[3])(page_t * page) = {nru_fault,lru_fault,opt_fault};
+  void (* alg_update[3])(page_t * page) = {nru_update,lru_update,opt_update};
+  void (* alg_destroy[3])() = {nru_destroy,lru_destroy,opt_destroy};
+  const char * alg_name[3] = {"NRU","LRU","OPT"};
 
   // NRU
   int * nru_victims = NULL;
   int nru_victims_cnt = 0;
 
-  // NOVO
+  // OPT
   page_t ** accesses;
 
   unsigned int s;               // address shift
@@ -111,7 +111,7 @@
     // Arguments validation
     if( argc != 5 && argc != 6 ) return fatal_error("Invalid parameters.\nExpected: %s\n", ARGS);
     for( int i = 0 ; i < 3; i++ ) if( !strcmp(argv[1],alg_name[i]) ) algorithm = (algorithm_t) i;
-    if( algorithm == -1 ) return fatal_error("Invalid algorithm.\nValid values: LRU, NRU, NOVO\n");
+    if( algorithm == -1 ) return fatal_error("Invalid algorithm.\nValid values: LRU, NRU, OPT\n");
     filename = argv[2]; if( access(filename,F_OK) == -1 ) return fatal_error("File %s does not exist.\n",filename);
     if( (page_size = atoi(argv[3])) <= 0 ) return fatal_error("Invalid page size\n");
     if( page_size < 8 || page_size > 32 ) return fatal_error("Page size must be between 8 and 32 KB.\n");
@@ -312,10 +312,10 @@
   }
 
     /******************/
-    /* NOVO - Optimal */
+    /* OPT - Optimal */
     /******************/
 
-  static void novo_init ()
+  static void opt_init ()
   {
     int ret;
     unsigned int addr;
@@ -344,7 +344,7 @@
     }
   }
 
-  static page_t * novo_fault (page_t * page)
+  static page_t * opt_fault (page_t * page)
   {
     page_t * victim = page_table == page ? page_table + 1 : page_table; // Initializes
     for( int i = 0 ; i < table_size; i++ ) page_table[i].info = 0; // info == found
@@ -370,12 +370,12 @@
     return victim;
   }
 
-  static void novo_update (page_t * page)
+  static void opt_update (page_t * page)
   {
     // nothing
   }
 
-  static void novo_destroy ()
+  static void opt_destroy ()
   {
     free(accesses);
   }

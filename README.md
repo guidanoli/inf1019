@@ -1,12 +1,10 @@
 # Virtual Memory Simulator
 
-The goal of this project is to implement a virtual memory simulator. Memory access will be simulated through files in which lines are composed of the physical address of the access and a character to determine whether the access is Read-Only or Read/Write. The simulator currently accepts the following page algorithms:
+The goal of this project is to examine the pros and cons of each **page replacement algorithm** for various page sizes, physical memory size and type of program accessing memory - comparing it to the optimal algorithm - in a safe simulating environment, with controlled data structures, avoiding memory leak and file locks. The simulator reads memory accesses as lines composed of the physical address and a character to determine whether the access is Read-Only or Read/Write. It currently accepts the following page algorithms, whose implementations are based on the well-known *Modern Operating Systems* book by **Andrew S. Tanenbaum & Hebert Bos**.
 
-* Not Recently Used (NRU)
-* Least Recently Used (LRU)
-* Optimal Algorithm (NOVO, stands for *NEW* in Portuguese)
-
-The implementation of each of those algorithms are based on the well-known "Modern Operating Systems" book by Andrew S. Tanenbaum & Hebert Bos.
+* *NRU* - Not Recently Used
+* *LRU* - Least Recently Used
+* *OPT* - Optimal Algorithm
 
 ## Getting Started
 
@@ -14,7 +12,7 @@ The following instructions will get you a copy of the project up and running on 
 
 ### Prerequisites
 
-Have a machine running a POSIX operating system. :grin:
+This project was first implemented on a machine running the **Fedora Thirty**, and I haven't tested it in a Windows environment (but there are have several reasons it wouldn't even compile on it). So, unless you'd like to fork and make it Windows compatible, you can only run this program on machines running on a **POSIX** operating system. :)
 
 ### Installing
 
@@ -57,8 +55,8 @@ The simulator takes the following parameters:
 $ ./sim-virtual <algorithm> <log path> <page size> <total size> [-D]
 ```
 
-* **algorithm** - one of the following: NRU, LRU, NOVO (case-sensitive)
-* **log path** - path to log file (with format as descripted above)
+* **algorithm** - one of the currently page replacement algorithms identifiers.
+* **log path** - path to log file (with format as described above)
 * **page size** - size of page in KB (8K, 16K, 32K)
 * **total size** - total size in memory in MB (1MB, 2MB, 4MB, 8MB, 16MB)
 * **D flag** - run simulator on debug mode (iterative and verbose)
@@ -67,10 +65,10 @@ You can safely interrupt the program mid its execution with Ctrl+C. At the end o
 
 ## Log files
 
-Since the log files are quite large and I avoid adding large files to the repository folder, I decided to host it elsewhere. You can download the .zip file with the four log files on the following links. Be aware that if you want to run the script (getresults.sh), you must first give it executing permission (chmod +x getresults.sh), and have all the four log files on the folder root.
+Since the log files are quite large and I avoid adding large files to the repository folder, I decided to host it elsewhere. You can download the .zip file with the four log files on the following link section. Be aware that if you want to run the script (getresults.sh), you must first give it executing permission (chmod +x getresults.sh), have a Python interpreter installed and have all the four log files on the folder root.
 
 ## Links
 
-(Seibel (*course supervisor*))[http://139.82.24.35/seibel/hp/]
-(Statement (*in Portuguese*))[https://drive.google.com/file/d/1fUyadkXQwtmSAcDa2FTxC0TYexYvmR2e/view?usp=sharing]
-(Log files (*for testing*))[https://drive.google.com/file/d/1s7By6hcJJ8N41QByLZVRp0rr6gXxdhQl/view?usp=sharing]
+[Seibel (*course supervisor*)](http://139.82.24.35/seibel/hp/)
+[Statement (*in Portuguese*)](https://drive.google.com/file/d/1fUyadkXQwtmSAcDa2FTxC0TYexYvmR2e/view?usp=sharing)
+[Log files (*for testing*)](https://drive.google.com/file/d/1s7By6hcJJ8N41QByLZVRp0rr6gXxdhQl/view?usp=sharing)

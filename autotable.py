@@ -1,4 +1,4 @@
-alg = ["NRU","LRU","NOVO"]
+alg = ["NRU","LRU","OPT"]
 log = ["compilador","compressor","matriz","simulador"]
 pag = ["8","16","32"]
 
