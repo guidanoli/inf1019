@@ -18,7 +18,7 @@
   #define ALG_UPDATE(p)       alg_update[algorithm]   (p)
   #define ALG_DESTROY()       alg_destroy[algorithm]  ()
 
-  #define NRU_CYCLES 0x10000000000      // 1K ticks/cycles
+  #define NRU_CYCLES 0x1000      // 1K ticks/cycles
   #define ULONG_MAX 0xFFFFFFFFFFFFFFFF  // From limits.h
 
   typedef enum {
@@ -231,7 +231,7 @@
   static page_t * nru_fault (page_t * page)
   {
     int best_victim = 0;
-    int best_class = 0;
+    int best_class = 0b11;
     nru_victims_cnt = 0;
 
     for( int i = 0; i < table_size ; i++ )
@@ -239,7 +239,7 @@
       page_t victim = page_table[i];
       if( !page_get_pflag(victim) ) continue;
       int class = (page_get_rflag(victim) << 1) | page_get_mflag(victim);
-      if( class > best_class )
+      if( class < best_class )
       {
         nru_victims_cnt = 0;
         best_class = class;
@@ -259,16 +259,14 @@
 
   static void nru_update (page_t * page)
   {
+    page_set_rflag(page,1);
     if( tcounter % NRU_CYCLES == 0 )
     {
-      page_t * temp = page_table;
       for( int i = 0 ; i < table_size; i++ )
       {
-        page_set_rflag(temp,0);
-        temp++;
+        page_set_rflag(page_table + i,0);
       }
     }
-    page_set_rflag(page,1);
   }
 
   static void nru_destroy ()
