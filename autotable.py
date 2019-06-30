@@ -27,7 +27,7 @@ with open("autoresults.txt") as f:
         alg_c += 1
 
 for p in pag:
-    print("\n===== PÁGINA %s KB" % (p))
+    print("\n===== Page size = %s KB" % (p))
     print()
     print("%s|" % (' '*14),end = '')
     for a in alg:
