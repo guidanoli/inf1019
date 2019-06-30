@@ -1,6 +1,6 @@
 # Virtual Memory Simulator
 
-The goal of this project is to examine the pros and cons of each **page replacement algorithm** for various page sizes, physical memory size and type of program accessing memory - comparing it to the optimal algorithm - in a safe simulating environment, with controlled data structures, avoiding memory leak and file locks. The simulator reads memory accesses as lines composed of the physical address and a character to determine whether the access is Read-Only or Read/Write. It currently accepts the following page algorithms, whose implementations are based on the well-known *Modern Operating Systems* book by **Andrew S. Tanenbaum & Hebert Bos**.
+The goal of this project is to examine the pros and cons of each **page replacement algorithm** for various page sizes, physical memory size and type of program accessing memory - comparing it to the optimal algorithm - in a safe simulating environment, with controlled data structures, avoiding memory leak and file locks. The simulator reads memory accesses as lines composed of the physical address and a character to determine whether the access is Read-Only or Read/Write. It currently accepts the following page algorithms, whose implementations are based on the well-known **__Modern Operating Systems__** book by *Andrew S. Tanenbaum & Hebert Bos*.
 
 * *NRU* - Not Recently Used
 * *LRU* - Least Recently Used
@@ -37,13 +37,7 @@ assert(is_power_of_two(1));
 assert(is_power_of_two(2));
 ```
 
-The tests all inherit the automatic test module interface, that helps with an enhanced and colourful log displaying not only the assertions but the code that generated the error and the line its located at on the test module. E.g:
-
-``` bash
-[SUCCESS] !is_power_of_two(0)
-[SUCCESS] is_power_of_two(1)
-[SUCCESS] is_power_of_two(2)
-```
+The tests all inherit the automatic test module interface, that helps with an enhanced and colourful log displaying not only the assertions but the code that generated the error and the line its located at on the test module.
 
 **Disclaimer:** All test source code and executables begin with *t.* and this prefix should be exclusive to these files!
 
@@ -61,7 +55,11 @@ $ ./sim-virtual <algorithm> <log path> <page size> <total size> [-D]
 * **total size** - total size in memory in MB (1MB, 2MB, 4MB, 8MB, 16MB)
 * **D flag** - run simulator on debug mode (iterative and verbose)
 
-You can safely interrupt the program mid its execution with Ctrl+C. At the end of its execution, the program will prompt some statistics.
+You can safely interrupt the program mid its execution with Ctrl+C. At the end of its execution, the program will prompt some statistics:
+
+* Number of **page faults** + percentage
+* Number of **dirty pages** + percentage
+* Time **performance** of program (hh:mm:ss)
 
 ## Log files
 
