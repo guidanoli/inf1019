@@ -46,7 +46,7 @@ The tests all inherit the automatic test module interface, that helps with an en
 The simulator takes the following parameters:
 
 ``` bash
-$ ./sim-virtual <algorithm> <log path> <page size> <total size> [-D]
+$ ./sim <algorithm> <log path> <page size> <total size> [-D]
 ```
 
 * **algorithm** - one of the currently page replacement algorithms identifiers.

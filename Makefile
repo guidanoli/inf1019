@@ -3,15 +3,13 @@
 
 CFLAGS = -w
 
-sim: sim-virtual
-
 tests: t.page t.utils t.hourglass
 
-sim-virtual: sim-virtual.o page.o utils.o hourglass.o
-	$(CC) $(DEBUG) -o sim-virtual sim-virtual.o page.o utils.o hourglass.o $(CFLAGS)
+sim: sim.o page.o utils.o hourglass.o
+	$(CC) $(DEBUG) -o sim sim.o page.o utils.o hourglass.o $(CFLAGS)
 
-sim-virtual.o: sim-virtual.c page.h utils.h
-	$(CC) $(DEBUG) -o sim-virtual.o sim-virtual.c -c $(CFLAGS)
+sim.o: sim.c page.h utils.h
+	$(CC) $(DEBUG) -o sim.o sim.c -c $(CFLAGS)
 
 page.o: page.c page.h
 	$(CC) $(DEBUG) -o page.o page.c -c $(CFLAGS)

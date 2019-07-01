@@ -11,7 +11,7 @@ do
 		for PAGE in 8 16 32
 		do
 			echo $PAGE | tee -a $OUTPUT
-			./sim-virtual $ALG $FILE.log $PAGE 16 | grep -oP "(faults|written): \K\d*" | tee -a $OUTPUT
+			./sim $ALG $FILE.log $PAGE 16 | grep -oP "(faults|written): \K\d*" | tee -a $OUTPUT
 		done
 	done
 done
