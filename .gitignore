@@ -1,21 +1,3 @@
-
-# UNIX Binaries
-*
-!*.*
-
-# C Makefile
-!*Makefile
-
-# Git file
-!*LICENSE
-
-# Backup files
-*~
-
-# Automated tests
-t.*
-!t.*.c
-
 # Prerequisites
 *.d
 
