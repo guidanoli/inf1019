@@ -1,3 +1,16 @@
+# UNIX Binaries
+*
+!*.*
+
+# C Makefile
+!*Makefile
+
+# Git file
+!*LICENSE
+
+# Backup files
+*~
+
 # Prerequisites
 *.d
 
